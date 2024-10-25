@@ -11,6 +11,8 @@
 #include <gl2d/gl2d.h>
 #include <platformTools.h>
 #include <tiledRenderer.h>
+#include <gameObject.h>
+
 
 struct playerData
 {
@@ -30,6 +32,7 @@ constexpr int BGs = 4;
 gl2d::Texture backGroundTexture[BGs];
 TiledRenderer tiledRenderer[BGs];
 #pragma endregion
+gameObject player;
 
 
 
@@ -69,7 +72,7 @@ bool initGame() {
 	//initializing stuff for the renderer
 	gl2d::init();
 	renderer.create();
-
+	///player.createObject(gameObject::entity, "");
 
 #pragma region texture loading
 
@@ -114,7 +117,7 @@ bool gameLogic(float deltaTime) {
 #pragma region mouse pos
 
 	glm::vec2 mousePos = platform::getRelMousePosition();
-	glm::vec2 screenCenter(w / 2.f, h / 2.f);
+	glm::vec2 screenCenter(playData.playerPos - renderer.currentCamera.position);
 	glm::vec2 mouseDirection = mousePos - screenCenter;
 
 	if (glm::length(mouseDirection) == 0.f) {
