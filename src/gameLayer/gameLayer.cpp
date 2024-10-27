@@ -72,7 +72,10 @@ bool initGame() {
 	//initializing stuff for the renderer
 	gl2d::init();
 	renderer.create();
-	///player.createObject(gameObject::entity, "");
+
+
+
+	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/ships/blue.png");
 
 #pragma region texture loading
 
@@ -148,10 +151,10 @@ bool gameLogic(float deltaTime) {
 #pragma region rendering
 
 	for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
-
+	player.update(deltaTime);
 	renderer.renderRectangle({ (playData.playerPos.x - playData.shipCenter.x), (playData.playerPos.y - playData.shipCenter.y),
 		playData.shipSize.x, playData.shipSize.y }, spaceShipTexture, Colors_White, {},
-		glm::degrees(playData.spaceShipAngle) + 90.f);
+			glm::degrees(playData.spaceShipAngle) + 90.f);
 	
 #pragma endregion
 
