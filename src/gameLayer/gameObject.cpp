@@ -24,9 +24,8 @@ void gameObject::setSize(float newSizeX, float newSizeY) {
 
 
 void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
-	sizeX = size.x; sizeY = size.y;
 
-	renderer.renderRectangle({ (pos.x - center.x), (pos.y - center.y), sizeX, sizeY }, objectTexture, 
+	renderer.renderRectangle({ (pos.x - center.x), (pos.y - center.y), size }, objectTexture, 
 		Colors_White, {}, glm::degrees(rotation) + 90.f);
 }
 

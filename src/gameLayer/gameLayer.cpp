@@ -75,6 +75,9 @@ bool initGame() {
 	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/ships/blue.png");
 	player.setSize(playData.shipSize.x, playData.shipSize.y);
 
+
+
+
 #pragma region texture loading
 
 	backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
@@ -149,7 +152,8 @@ bool gameLogic(float deltaTime) {
 
 	for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
 	player.update(deltaTime, renderer);
-	
+
+
 #pragma endregion
 
 
