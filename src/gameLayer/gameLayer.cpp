@@ -16,10 +16,7 @@
 
 struct playerData
 {
-	glm::vec2 playerPos = { 100, 100 };
-	float spaceShipAngle = 0.f;
 	glm::vec2 shipSize = { 250.f, 250.f };
-	glm::vec2 shipCenter = { shipSize.x / 2, shipSize.y / 2 };
 	float speed = 500.0f;
 	float cameraSize = 0.4f;
 	bool mouseShowing = true;
@@ -55,7 +52,7 @@ void playerMove(float DT) {
 	if (move.x != 0 || move.y != 0) {
 		move = glm::normalize(move);
 		move *= DT * playData.speed;
-		playData.playerPos += move;
+		player.pos += move;
 	}
 }
 void cameraSizeChange(float DT) {
@@ -76,10 +73,10 @@ bool initGame() {
 
 
 	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/ships/blue.png");
+	player.setSize(playData.shipSize.x, playData.shipSize.y);
 
 #pragma region texture loading
 
-	spaceShipTexture.loadFromFile(RESOURCES_PATH "spaceShip/ships/blue.png", true);
 	backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
 	backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true);
 	backGroundTexture[2].loadFromFile(RESOURCES_PATH "background3.png", true);
@@ -120,7 +117,7 @@ bool gameLogic(float deltaTime) {
 #pragma region mouse pos
 
 	glm::vec2 mousePos = platform::getRelMousePosition();
-	glm::vec2 screenCenter(playData.playerPos - renderer.currentCamera.position);
+	glm::vec2 screenCenter(player.pos - renderer.currentCamera.position);
 	glm::vec2 mouseDirection = mousePos - screenCenter;
 
 	if (glm::length(mouseDirection) == 0.f) {
@@ -129,7 +126,7 @@ bool gameLogic(float deltaTime) {
 		mouseDirection = normalize(mouseDirection);
 	}
 
-	playData.spaceShipAngle = atan2(mouseDirection.y, -mouseDirection.x);
+	player.rotation = atan2(mouseDirection.y, -mouseDirection.x);
 	platform::showMouse(playData.mouseShowing);
 
 #pragma endregion
@@ -137,7 +134,7 @@ bool gameLogic(float deltaTime) {
 #pragma region camera settings
 
 	renderer.currentCamera.zoom = playData.cameraSize;
-	renderer.currentCamera.follow(playData.playerPos, deltaTime * 450, 10, 50, w, h);
+	renderer.currentCamera.follow(player.pos, deltaTime * 450, 10, 50, w, h);
 
 #pragma endregion
 
@@ -151,10 +148,7 @@ bool gameLogic(float deltaTime) {
 #pragma region rendering
 
 	for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
-	player.update(deltaTime);
-	renderer.renderRectangle({ (playData.playerPos.x - playData.shipCenter.x), (playData.playerPos.y - playData.shipCenter.y),
-		playData.shipSize.x, playData.shipSize.y }, spaceShipTexture, Colors_White, {},
-			glm::degrees(playData.spaceShipAngle) + 90.f);
+	player.update(deltaTime, renderer);
 	
 #pragma endregion
 
