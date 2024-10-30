@@ -15,6 +15,7 @@ void gameObject::createObject(objectType type, const char* textureFile) {
 	rotation = 0;
 
 	objectTexture.loadFromFile(textureFile, true);
+
 }
 
 void gameObject::setSize(float newSizeX, float newSizeY) {

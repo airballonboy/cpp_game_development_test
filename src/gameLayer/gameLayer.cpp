@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
+#include <safeSave.h>
 #include "platformInput.h"
 #include "imgui.h"
 #include <iostream>
@@ -20,12 +21,12 @@ struct playerData
 	float speed = 500.0f;
 	float cameraSize = 0.4f;
 	bool mouseShowing = true;
-} playData;
+} playData, yes;
 
 #pragma region declerations
 gl2d::Renderer2D renderer;
 gl2d::Texture spaceShipTexture;
-constexpr int BGs = 4;
+const int BGs = 4;
 gl2d::Texture backGroundTexture[BGs];
 TiledRenderer tiledRenderer[BGs];
 #pragma endregion
@@ -70,13 +71,16 @@ bool initGame() {
 	gl2d::init();
 	renderer.create();
 
-
+	sfs::writeEntireFile(&playData, sizeof(playData), "playerdata");
+	playData.mouseShowing = false;
+	sfs::readEntireFile(&playData, sizeof(playData), "playerdata", true);
+	std::cout << playData.mouseShowing;
 
 	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/ships/blue.png");
 	player.setSize(playData.shipSize.x, playData.shipSize.y);
 
 
-
+	 
 
 #pragma region texture loading
 
