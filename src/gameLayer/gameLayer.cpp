@@ -20,7 +20,7 @@ struct playerData
 	float speed = 500.0f;
 	float cameraSize = 0.4f;
 	bool mouseShowing = true;
-} playData, yes;
+} playData;
 
 #pragma region declerations
 gl2d::Renderer2D renderer;
