@@ -231,7 +231,6 @@ namespace gl2d
 		if (hasInitialized) { return; }
 		hasInitialized = true;
 
-		//int last = 0;
 		//glGetIntegerv(GL_NUM_EXTENSIONS, &last);
 		//for(int i=0; i<last; i++)
 		//{
@@ -2096,7 +2095,7 @@ namespace gl2d
 			{
 				len = max;
 				position = pos - (max * delta);
-				position += delta * speed;
+				//position += delta * speed;
 			}
 			else
 			{
@@ -2110,7 +2109,7 @@ namespace gl2d
 			bool signY2 = delta.y >= 0;
 			if (signX2 != signX || signY2 != signY || glm::length(delta2) > len)
 			{
-				position = pos;
+				//position = pos;
 			}
 		}
 	}

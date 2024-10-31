@@ -23,6 +23,10 @@ void gameObject::setSize(float newSizeX, float newSizeY) {
 	center = { size.x / 2, size.y / 2 };
 }
 
+void gameObject::gravity() {
+	//TODO add collision detection and gravity system
+}
+
 
 void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 

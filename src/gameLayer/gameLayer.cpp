@@ -146,7 +146,7 @@ bool gameLogic(float deltaTime) {
 		cameraSizeChange(deltaTime);
 	}
 #pragma endregion
-	
+
 #pragma region rendering
 
 	for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
