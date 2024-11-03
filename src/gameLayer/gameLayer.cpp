@@ -26,13 +26,28 @@ struct playerData
 gl2d::Renderer2D renderer;
 gl2d::Texture spaceShipTexture;
 const int BGs = 4;
+float fpsCurrentTimer;
+float fps;
 gl2d::Texture backGroundTexture[BGs];
 TiledRenderer tiledRenderer[BGs];
 #pragma endregion
-gameObject player;
+gameObject player, man;
 
 
 
+
+
+
+
+void printFpsCounter(float deltaTime) {
+	fpsCurrentTimer += deltaTime;
+	fps++;
+	if (fpsCurrentTimer >= 1) {
+		fpsCurrentTimer = 0;
+		std::cout << fps << " ";
+		fps = 0;
+	}
+}
 void playerMove(float DT) {
 	glm::vec2 move = {};
 
@@ -70,12 +85,12 @@ bool initGame() {
 	gl2d::init();
 	renderer.create();
 
-
+	man.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/ships/green.png");
 	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/ships/blue.png");
 	player.setSize(playData.shipSize.x, playData.shipSize.y);
 
 
-	 
+	
 
 #pragma region texture loading
 
@@ -147,6 +162,9 @@ bool gameLogic(float deltaTime) {
 	}
 #pragma endregion
 
+	printFpsCounter(deltaTime);
+	
+
 #pragma region rendering
 
 	for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
@@ -163,7 +181,7 @@ bool gameLogic(float deltaTime) {
 //This function might not be be called if the program is forced closed
 void closeGame() {
 
-
+	
 
 }
 
