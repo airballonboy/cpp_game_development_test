@@ -20,6 +20,7 @@ struct playerData
 	float speed = 500.0f;
 	float cameraSize = 0.4f;
 	bool mouseShowing = true;
+	std::vector<gameObject> bullets;
 } playData;
 
 #pragma region declerations
@@ -30,6 +31,7 @@ float fpsCurrentTimer;
 float fps;
 gl2d::Texture backGroundTexture[BGs];
 TiledRenderer tiledRenderer[BGs];
+loadOnceClass loadOnce;
 #pragma endregion
 gameObject player, man;
 
@@ -49,32 +51,42 @@ void printFpsCounter(float deltaTime) {
 	}
 }
 void playerMove(float DT) {
-	glm::vec2 move = {};
+
+
 
 	if (platform::isButtonHeld(platform::Button::W) || platform::isButtonHeld(platform::Button::Up)) {
-		move.y = -1;
+		player.movement.y = -1;
 	}
 	if (platform::isButtonHeld(platform::Button::S) || platform::isButtonHeld(platform::Button::Down)) {
-		move.y = 1;
+		player.movement.y = 1;
 	}
 	if (platform::isButtonHeld(platform::Button::A) || platform::isButtonHeld(platform::Button::Left)) {
-		move.x = -1;
+		player.movement.x = -1;
 	}
 	if (platform::isButtonHeld(platform::Button::D) || platform::isButtonHeld(platform::Button::Right)) {
-		move.x = 1;
+		player.movement.x = 1;
 	}
 
-	if (move.x != 0 || move.y != 0) {
-		move = glm::normalize(move);
-		move *= DT * playData.speed;
-		player.pos += move;
-	}
+
 }
 void cameraSizeChange(float DT) {
 	if (platform::isButtonHeld(platform::Button::I) && playData.cameraSize < 0.7f) {
 		playData.cameraSize += (DT / 50);
-	}else if (platform::isButtonHeld(platform::Button::K) && playData.cameraSize > 0.3f) {
+	} else if (platform::isButtonHeld(platform::Button::K) && playData.cameraSize > 0.3f) {
 		playData.cameraSize -= (DT / 50);
+	}
+}
+void bulletShooting(float DT, glm::vec2 mouseDirection) {
+	if (platform::isLMousePressed()) {
+		gameObject b;
+		b.pos = player.pos;
+		b.rotation = player.rotation;
+		b.speed = 1500;
+		b.movement = mouseDirection;
+		b.setSize(50, 50);
+		b.createObject(gameObject::objectType::bullet, gameObject::atlas, { 3,2 }, { 1,0 }, 500);
+
+		playData.bullets.push_back(b);
 	}
 }
 
@@ -85,12 +97,13 @@ bool initGame() {
 	gl2d::init();
 	renderer.create();
 
-	man.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/ships/green.png");
-	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/ships/blue.png");
+	//man.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/ships/green.png", gameObject::atlas);
+	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, { 1,0 }, 128);
 	player.setSize(playData.shipSize.x, playData.shipSize.y);
+	player.speed = playData.speed;
+	loadOnce.loadBullets(gameObject::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png", gameObject::atlas, {3,2}, {1,0}, 500);
 
 
-	
 
 #pragma region texture loading
 
@@ -113,7 +126,7 @@ bool initGame() {
 
 
 #pragma endregion 
-	
+
 	return true;
 }
 
@@ -156,22 +169,37 @@ bool gameLogic(float deltaTime) {
 #pragma endregion
 
 #pragma region input checking
-	if (platform::isButtonHeld) {
-		playerMove(deltaTime);
-		cameraSizeChange(deltaTime);
-	}
+
+	playerMove(deltaTime);
+	cameraSizeChange(deltaTime);
+	bulletShooting(deltaTime, mouseDirection);
+
 #pragma endregion
 
-	printFpsCounter(deltaTime);
-	
+
+
 
 #pragma region rendering
 
 	for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
+	for (int i = 0; i < playData.bullets.size(); i++) {
+		if (glm::distance(playData.bullets[i].pos, player.pos) > 1000) { playData.bullets.erase(playData.bullets.begin() + i); i--; continue; }
+		playData.bullets[i].update(deltaTime, renderer);
+	}
+
+
 	player.update(deltaTime, renderer);
 
-
 #pragma endregion
+
+	printFpsCounter(deltaTime);
+
+	player.movement = { 0, 0 };
+
+	//ImGui::Begin("debug");
+	//ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
+	//ImGui::Text("fps: %d \n", (int)(std::round(1 / deltaTime)));
+	//ImGui::End();
 
 
 	renderer.flush();
@@ -181,7 +209,7 @@ bool gameLogic(float deltaTime) {
 //This function might not be be called if the program is forced closed
 void closeGame() {
 
-	
+
 
 }
 
