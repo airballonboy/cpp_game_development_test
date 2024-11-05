@@ -5,7 +5,7 @@ i'm Ahmed
 
 ---
 
-# the rest is setup guide that came with the ase project i'm working with
+# the rest is setup guide that came with the base project i'm working with
 
 ---
 <p>Opening the Solution:</p> 
