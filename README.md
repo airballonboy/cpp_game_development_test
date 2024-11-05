@@ -1,16 +1,13 @@
-# cmakeSetup
+# about me
+
+---
+i'm Ahmed 
 
 ---
 
-This is a cmake setup that loads glfw, opengl, stb_image, stb_truetype and a custom 2d library. It works both on windows and linux.
-
-![](https://github.com/meemknight/photos/blob/master/cmakeSetup1.png)
----
-
-  [FULL EXAMPLE VIDEO!](https://www.youtube.com/watch?v=zJoXMfCI9LM)
+# the rest is setup guide that came with the ase project i'm working with
 
 ---
-
 <p>Opening the Solution:</p> 
 
 <img src="https://raw.githubusercontent.com/meemknight/photos/master/llge1.gif" width="350">
