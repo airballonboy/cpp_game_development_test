@@ -1,5 +1,6 @@
 #pragma once
 #include <gl2d/gl2d.h>
+#include <vector>
 
 
 
@@ -17,7 +18,6 @@ public:
 	textureType currentTextureType;
 	objectType currentType;
 	void createObject(objectType, const char*, textureType = normal, glm::vec2 = { 1, 1 }, glm::vec2 = { 0, 0 }, int = 128);
-	void createObject(objectType, textureType = normal, glm::vec2 = { 1, 1 }, glm::vec2 = { 0, 0 }, int = 128);
 	void update(float, gl2d::Renderer2D&);
 	void gravity();
 	void setSize(float, float);
@@ -41,5 +41,11 @@ public:
 };
 class loadOnceClass {
 public:
-	void loadBullets(gameObject::objectType, const char*, gameObject::textureType = gameObject::normal, glm::vec2 = { 1, 1 }, glm::vec2 = { 0, 0 }, int = 128);
+	std::vector<const char*> loadedTexturesNames;
+	std::vector<gl2d::Texture> loadedTextures;
+	std::vector<gl2d::TextureAtlasPadding> loadedTextureAtlases;
+	
+	
+	int checkTextures(const char*, bool, int = 128, glm::vec2 = { 0, 0 });
+	//void loadBullets(gameObject::objectType, const char*, gameObject::textureType = gameObject::normal, glm::vec2 = { 1, 1 }, glm::vec2 = { 0, 0 }, int = 128);
 };

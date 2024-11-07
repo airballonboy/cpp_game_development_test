@@ -31,7 +31,7 @@ float fpsCurrentTimer;
 float fps;
 gl2d::Texture backGroundTexture[BGs];
 TiledRenderer tiledRenderer[BGs];
-loadOnceClass loadOnce;
+//loadOnceClass loadOnce;
 #pragma endregion
 gameObject player, man;
 
@@ -84,7 +84,7 @@ void bulletShooting(float DT, glm::vec2 mouseDirection) {
 		b.speed = 1500;
 		b.movement = mouseDirection;
 		b.setSize(50, 50);
-		b.createObject(gameObject::objectType::bullet, gameObject::atlas, { 3,2 }, { 1,0 }, 500);
+		b.createObject(gameObject::objectType::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png", gameObject::atlas, { 3,2 }, { 1,0 }, 500);
 
 		playData.bullets.push_back(b);
 	}
@@ -101,7 +101,7 @@ bool initGame() {
 	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, { 1,0 }, 128);
 	player.setSize(playData.shipSize.x, playData.shipSize.y);
 	player.speed = playData.speed;
-	loadOnce.loadBullets(gameObject::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png", gameObject::atlas, {3,2}, {1,0}, 500);
+	//loadOnce.loadBullets(gameObject::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png", gameObject::atlas, {3,2}, {1,0}, 500);
 
 
 

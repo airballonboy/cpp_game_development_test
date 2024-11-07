@@ -7,8 +7,10 @@
 int objectCount = 0;
 gl2d::TextureAtlasPadding bulletAtlas;
 gl2d::Texture bulletTexture;
+loadOnceClass loadOnce;
 
-void loadOnceClass::loadBullets(gameObject::objectType type, const char* textureFile, gameObject::textureType _currentTextureType, glm::vec2 atlasPoint, glm::vec2 texturePoint, int atlasSize) {
+
+/*void loadOnceClass::loadBullets(gameObject::objectType type, const char* textureFile, gameObject::textureType _currentTextureType, glm::vec2 atlasPoint, glm::vec2 texturePoint, int atlasSize) {
 	if (_currentTextureType == gameObject::normal) {
 		bulletTexture.loadFromFile(textureFile, true);
 	} else if (_currentTextureType == gameObject::atlas) {
@@ -16,6 +18,40 @@ void loadOnceClass::loadBullets(gameObject::objectType type, const char* texture
 		bulletAtlas = gl2d::TextureAtlasPadding(atlasPoint.x, atlasPoint.y, bulletTexture.GetSize().x, bulletTexture.GetSize().y);
 		printf("doen");
 	}
+}*/
+//vectors are a pain
+int loadOnceClass::checkTextures(const char* Texture, bool atlas, int atlasSize, glm::vec2 atlasPoint) {
+	for (const char* T : loadedTexturesNames) {
+		printf("o");
+		if (Texture == T) {
+			printf("x");
+			return std::distance(loadedTexturesNames.begin(), find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture));
+		}
+		loadOnceClass::loadedTexturesNames.push_back(Texture);
+		gl2d::Texture t;
+		gl2d::TextureAtlasPadding tPadding;
+		if (!atlas) {
+			t.loadFromFile(Texture, true);
+		} else {
+			t.loadFromFileWithPixelPadding(Texture, atlasSize, true);
+			tPadding = gl2d::TextureAtlasPadding(atlasPoint.x, atlasPoint.y, t.GetSize().x, t.GetSize().y);
+			loadOnceClass::loadedTextureAtlases.push_back(tPadding);
+		}
+		loadOnceClass::loadedTextures.push_back(t);
+		return std::distance(loadedTexturesNames.begin(), find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture));
+	}
+	loadOnceClass::loadedTexturesNames.push_back(Texture);
+	gl2d::Texture t;
+	gl2d::TextureAtlasPadding tPadding;
+	if (!atlas) {
+		t.loadFromFile(Texture, true);
+	} else {
+		t.loadFromFileWithPixelPadding(Texture, atlasSize, true);
+		tPadding = gl2d::TextureAtlasPadding(atlasPoint.x, atlasPoint.y, t.GetSize().x, t.GetSize().y);
+		loadOnceClass::loadedTextureAtlases.push_back(tPadding);
+	}
+	loadOnceClass::loadedTextures.push_back(t);
+	return std::distance(loadedTexturesNames.begin(), find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture));
 }
 
 void gameObject::createObject(objectType type, const char* textureFile, textureType _currentTextureType, glm::vec2 atlasPoint, glm::vec2 texturePoint, int atlasSize) {
@@ -25,19 +61,14 @@ void gameObject::createObject(objectType type, const char* textureFile, textureT
 	currentTextureType = _currentTextureType;
 	currentType = type;
 	if (currentTextureType == normal) {
-		objectTexture.loadFromFile(textureFile, true);
+		//objectTexture = ;//(loadOnce.loadedTextures[loadOnce.checkTextures(textureFile, false)]);
 	} else if (currentTextureType == atlas) {
-		objectTexture.loadFromFileWithPixelPadding(textureFile, atlasSize, true);
-		objectAtlas = gl2d::TextureAtlasPadding(atlasPoint.x, atlasPoint.y, objectTexture.GetSize().x, objectTexture.GetSize().y);
+		//loadOnce.checkTextures(textureFile, true, atlasSize, atlasPoint);
+		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(textureFile, true, atlasSize, atlasPoint)];
+		objectAtlas = (loadOnce.loadedTextureAtlases[loadOnce.checkTextures(textureFile, true, atlasSize, atlasPoint)]);
 	}
 }
-void gameObject::createObject(objectType type, textureType _currentTextureType, glm::vec2 atlasPoint, glm::vec2 texturePoint, int atlasSize) {
-	objectCount++;
-	id = objectCount;
-	currentAtlasPoint = texturePoint;
-	currentTextureType = _currentTextureType;
-	currentType = type;
-}
+
 
 bool gameObject::isTheSameObject(gameObject otherObject) {
 	if (this->id == otherObject.id) {
@@ -68,7 +99,7 @@ void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 	if (movement != glm::vec2{0, 0}) { this->move(deltaTime); this->pos += movement; }
 
 
-	if (currentType == bullet) {
+	/*if (currentType == bullet) {
 		if (currentTextureType == normal) {
 			renderer.renderRectangle({ (pos.x - center.x), (pos.y - center.y), size }, bulletTexture,
 				Colors_White, {}, glm::degrees(this->rotation) + 90.f);
@@ -77,7 +108,7 @@ void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 				Colors_White, {}, glm::degrees(this->rotation) + 90.f, bulletAtlas.get(currentAtlasPoint.x, currentAtlasPoint.y));
 		}
 		return;
-	}
+	}*/
 	if (currentTextureType == normal) {
 		renderer.renderRectangle({ (pos.x - center.x), (pos.y - center.y), size }, objectTexture,
 			Colors_White, {}, glm::degrees(this->rotation) + 90.f);
