@@ -45,7 +45,6 @@ public:
 	std::vector<gl2d::Texture> loadedTextures;
 	std::vector<gl2d::TextureAtlasPadding> loadedTextureAtlases;
 	
-	
 	int checkTextures(const char*, bool, int = 128, glm::vec2 = { 0, 0 });
-	//void loadBullets(gameObject::objectType, const char*, gameObject::textureType = gameObject::normal, glm::vec2 = { 1, 1 }, glm::vec2 = { 0, 0 }, int = 128);
+
 };

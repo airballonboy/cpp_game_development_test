@@ -25,15 +25,14 @@ struct playerData
 
 #pragma region declerations
 gl2d::Renderer2D renderer;
-gl2d::Texture spaceShipTexture;
-const int BGs = 4;
 float fpsCurrentTimer;
 float fps;
+const int BGs = 4;
 gl2d::Texture backGroundTexture[BGs];
 TiledRenderer tiledRenderer[BGs];
-//loadOnceClass loadOnce;
+gameObject player;
 #pragma endregion
-gameObject player, man;
+
 
 
 
@@ -91,21 +90,18 @@ void bulletShooting(float DT, glm::vec2 mouseDirection) {
 }
 
 
-
 bool initGame() {
 	//initializing stuff for the renderer
 	gl2d::init();
 	renderer.create();
 
-	//man.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/ships/green.png", gameObject::atlas);
 	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, { 1,0 }, 128);
 	player.setSize(playData.shipSize.x, playData.shipSize.y);
 	player.speed = playData.speed;
-	//loadOnce.loadBullets(gameObject::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png", gameObject::atlas, {3,2}, {1,0}, 500);
 
 
 
-#pragma region texture loading
+#pragma region background texture loading
 
 	backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
 	backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true);
@@ -183,7 +179,7 @@ bool gameLogic(float deltaTime) {
 
 	for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
 	for (int i = 0; i < playData.bullets.size(); i++) {
-		if (glm::distance(playData.bullets[i].pos, player.pos) > 1000) { playData.bullets.erase(playData.bullets.begin() + i); i--; continue; }
+		if (glm::distance(playData.bullets[i].pos, player.pos) > 5000) { playData.bullets.erase(playData.bullets.begin() + i); i--; continue; }
 		playData.bullets[i].update(deltaTime, renderer);
 	}
 
@@ -192,14 +188,14 @@ bool gameLogic(float deltaTime) {
 
 #pragma endregion
 
-	printFpsCounter(deltaTime);
+	//printFpsCounter(deltaTime);
 
 	player.movement = { 0, 0 };
 
-	//ImGui::Begin("debug");
-	//ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
-	//ImGui::Text("fps: %d \n", (int)(std::round(1 / deltaTime)));
-	//ImGui::End();
+	ImGui::Begin("debug");
+	ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
+	ImGui::Text("fps: %d \n", (int)(std::round(1 / deltaTime)));
+	ImGui::End();
 
 
 	renderer.flush();

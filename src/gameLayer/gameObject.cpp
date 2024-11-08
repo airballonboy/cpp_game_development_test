@@ -5,11 +5,9 @@
 
 
 int objectCount = 0;
-gl2d::TextureAtlasPadding bulletAtlas;
-gl2d::Texture bulletTexture;
 loadOnceClass loadOnce;
 
-//vectors are a pain
+//Checks if the current texture is loaded or not and loads it if not
 int loadOnceClass::checkTextures(const char* Texture, bool atlas, int atlasSize, glm::vec2 atlasPoint) {
 	for (const char* T : loadedTexturesNames) {
 		if (Texture == T) { return std::distance(loadedTexturesNames.begin(), find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture)); }
@@ -28,6 +26,7 @@ int loadOnceClass::checkTextures(const char* Texture, bool atlas, int atlasSize,
 	return std::distance(loadedTexturesNames.begin(), find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture));
 }
 
+//Creating the object and loading it's texture if it isn't loaded
 void gameObject::createObject(objectType type, const char* textureFile, textureType _currentTextureType, glm::vec2 atlasPoint, glm::vec2 texturePoint, int atlasSize) {
 	objectCount++;
 	id = objectCount;
@@ -42,7 +41,7 @@ void gameObject::createObject(objectType type, const char* textureFile, textureT
 	}
 }
 
-
+//Checks if two objects are the same
 bool gameObject::isTheSameObject(gameObject otherObject) {
 	if (this->id == otherObject.id) {
 		return true;
@@ -71,17 +70,6 @@ void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 	if (enableGravity) { this->gravity(); }
 	if (movement != glm::vec2{0, 0}) { this->move(deltaTime); this->pos += movement; }
 
-
-	/*if (currentType == bullet) {
-		if (currentTextureType == normal) {
-			renderer.renderRectangle({ (pos.x - center.x), (pos.y - center.y), size }, bulletTexture,
-				Colors_White, {}, glm::degrees(this->rotation) + 90.f);
-		} else if (currentTextureType == atlas) {
-			renderer.renderRectangle({ (pos.x - center.x), (pos.y - center.y), size }, bulletTexture,
-				Colors_White, {}, glm::degrees(this->rotation) + 90.f, bulletAtlas.get(currentAtlasPoint.x, currentAtlasPoint.y));
-		}
-		return;
-	}*/
 	if (currentTextureType == normal) {
 		renderer.renderRectangle({ (pos.x - center.x), (pos.y - center.y), size }, objectTexture,
 			Colors_White, {}, glm::degrees(this->rotation) + 90.f);
