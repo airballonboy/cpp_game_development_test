@@ -9,36 +9,10 @@ gl2d::TextureAtlasPadding bulletAtlas;
 gl2d::Texture bulletTexture;
 loadOnceClass loadOnce;
 
-
-/*void loadOnceClass::loadBullets(gameObject::objectType type, const char* textureFile, gameObject::textureType _currentTextureType, glm::vec2 atlasPoint, glm::vec2 texturePoint, int atlasSize) {
-	if (_currentTextureType == gameObject::normal) {
-		bulletTexture.loadFromFile(textureFile, true);
-	} else if (_currentTextureType == gameObject::atlas) {
-		bulletTexture.loadFromFileWithPixelPadding(textureFile, atlasSize, true);
-		bulletAtlas = gl2d::TextureAtlasPadding(atlasPoint.x, atlasPoint.y, bulletTexture.GetSize().x, bulletTexture.GetSize().y);
-		printf("doen");
-	}
-}*/
 //vectors are a pain
 int loadOnceClass::checkTextures(const char* Texture, bool atlas, int atlasSize, glm::vec2 atlasPoint) {
 	for (const char* T : loadedTexturesNames) {
-		printf("o");
-		if (Texture == T) {
-			printf("x");
-			return std::distance(loadedTexturesNames.begin(), find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture));
-		}
-		loadOnceClass::loadedTexturesNames.push_back(Texture);
-		gl2d::Texture t;
-		gl2d::TextureAtlasPadding tPadding;
-		if (!atlas) {
-			t.loadFromFile(Texture, true);
-		} else {
-			t.loadFromFileWithPixelPadding(Texture, atlasSize, true);
-			tPadding = gl2d::TextureAtlasPadding(atlasPoint.x, atlasPoint.y, t.GetSize().x, t.GetSize().y);
-			loadOnceClass::loadedTextureAtlases.push_back(tPadding);
-		}
-		loadOnceClass::loadedTextures.push_back(t);
-		return std::distance(loadedTexturesNames.begin(), find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture));
+		if (Texture == T) { return std::distance(loadedTexturesNames.begin(), find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture)); }
 	}
 	loadOnceClass::loadedTexturesNames.push_back(Texture);
 	gl2d::Texture t;
@@ -61,11 +35,10 @@ void gameObject::createObject(objectType type, const char* textureFile, textureT
 	currentTextureType = _currentTextureType;
 	currentType = type;
 	if (currentTextureType == normal) {
-		//objectTexture = ;//(loadOnce.loadedTextures[loadOnce.checkTextures(textureFile, false)]);
+		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(textureFile, false)];
 	} else if (currentTextureType == atlas) {
-		//loadOnce.checkTextures(textureFile, true, atlasSize, atlasPoint);
 		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(textureFile, true, atlasSize, atlasPoint)];
-		objectAtlas = (loadOnce.loadedTextureAtlases[loadOnce.checkTextures(textureFile, true, atlasSize, atlasPoint)]);
+		objectAtlas = loadOnce.loadedTextureAtlases[loadOnce.checkTextures(textureFile, true, atlasSize, atlasPoint)];
 	}
 }
 
