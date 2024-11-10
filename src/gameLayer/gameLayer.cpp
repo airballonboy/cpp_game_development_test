@@ -74,6 +74,11 @@ void cameraSizeChange(float DT) {
 	} else if (platform::isButtonHeld(platform::Button::K) && playData.cameraSize > 0.3f) {
 		playData.cameraSize -= (DT / 50);
 	}
+	if (platform::isButtonHeld(platform::Button::LeftCtrl) && platform::isButtonPressedOn(platform::Button::Enter)) {
+		if (platform::isFullScreen()) {
+			platform::setFullScreen(false);
+		}else { platform::setFullScreen(true); }
+	}
 }
 void bulletShooting(float DT, glm::vec2 mouseDirection) {
 	if (platform::isLMousePressed()) {
