@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include <iostream>
 #include <sstream>
+#include <cstdio>
 #include "imfilebrowser.h"
 #include <gl2d/gl2d.h>
 #include <platformTools.h>
@@ -21,6 +22,7 @@ struct playerData
 	float cameraSize = 0.4f;
 	bool mouseShowing = true;
 	std::vector<gameObject> bullets;
+	std::vector<gameObject> enemies;
 } playData;
 
 #pragma region declerations
@@ -50,9 +52,6 @@ void printFpsCounter(float deltaTime) {
 	}
 }
 void playerMove(float DT) {
-
-
-
 	if (platform::isButtonHeld(platform::Button::W) || platform::isButtonHeld(platform::Button::Up)) {
 		player.movement.y = -1;
 	}
@@ -65,8 +64,6 @@ void playerMove(float DT) {
 	if (platform::isButtonHeld(platform::Button::D) || platform::isButtonHeld(platform::Button::Right)) {
 		player.movement.x = 1;
 	}
-
-
 }
 void cameraSizeChange(float DT) {
 	if (platform::isButtonHeld(platform::Button::I) && playData.cameraSize < 0.7f) {
@@ -93,12 +90,22 @@ void bulletShooting(float DT, glm::vec2 mouseDirection) {
 		playData.bullets.push_back(b);
 	}
 }
+void enemyMovement(float DT, gameObject &e) {
+	glm::vec2 directionToPlayer = player.pos - e.pos;
+	if (glm::length(directionToPlayer) == 0) { directionToPlayer = { 1,0 }; } else { directionToPlayer = glm::normalize(directionToPlayer); }
+	glm::vec2 newDirection = {};
+	if (glm::length(directionToPlayer + e.enemyViewDirection) <= 0.2f){ newDirection = glm::vec2(directionToPlayer.y, -directionToPlayer.x); } 
+	else{ newDirection = DT * e.turningSpeed * directionToPlayer + e.enemyViewDirection; }
+	e.enemyViewDirection = glm::normalize(newDirection);
+	e.pos += e.enemyViewDirection * DT * e.speed;
+}
 
 
 bool initGame() {
 	//initializing stuff for the renderer
 	gl2d::init();
 	renderer.create();
+	std::srand(std::time(0));
 
 	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, { 1,0 }, 128);
 	player.setSize(playData.shipSize.x, playData.shipSize.y);
@@ -107,7 +114,6 @@ bool initGame() {
 
 
 #pragma region background texture loading
-
 	backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
 	backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true);
 	backGroundTexture[2].loadFromFile(RESOURCES_PATH "background3.png", true);
@@ -123,9 +129,6 @@ bool initGame() {
 	tiledRenderer[1].paralaxStrength = 0.2;
 	tiledRenderer[2].paralaxStrength = 0.4;
 	tiledRenderer[3].paralaxStrength = 0.7;
-
-
-
 #pragma endregion 
 
 	return true;
@@ -174,11 +177,9 @@ bool gameLogic(float deltaTime) {
 	playerMove(deltaTime);
 	cameraSizeChange(deltaTime);
 	bulletShooting(deltaTime, mouseDirection);
+	for (auto& e : playData.enemies) { enemyMovement(deltaTime, e); }
 
 #pragma endregion
-
-
-
 
 #pragma region rendering
 
@@ -187,6 +188,7 @@ bool gameLogic(float deltaTime) {
 		if (glm::distance(playData.bullets[i].pos, player.pos) > 5000) { playData.bullets.erase(playData.bullets.begin() + i); i--; continue; }
 		playData.bullets[i].update(deltaTime, renderer);
 	}
+	for (auto& e : playData.enemies) { e.update(deltaTime, renderer); }
 
 
 	player.update(deltaTime, renderer);
@@ -199,7 +201,18 @@ bool gameLogic(float deltaTime) {
 
 	ImGui::Begin("debug");
 	ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
+	ImGui::Text("enemy count: %d \n", (int)playData.enemies.size());
 	ImGui::Text("fps: %d \n", (int)(std::round(1 / deltaTime)));
+	if (!ImGui::Button("spawn enemy")) {
+		glm::uvec2 enemyTypes[] = { {0,0}, {0,1}, {2,0}, {3, 1} };
+		gameObject e;
+		e.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, enemyTypes[rand() % 4], 128);
+		e.pos = player.pos;
+		e.setSize(playData.shipSize.x, playData.shipSize.y);
+		e.speed = 400 + rand() % 1000;
+		e.turningSpeed = 2.f + (rand() & 1000) / 500.0f;
+		playData.enemies.push_back(e);
+	}
 	ImGui::End();
 
 

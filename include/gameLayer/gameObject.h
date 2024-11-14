@@ -27,11 +27,12 @@ public:
 	glm::vec2 movement = { 0, 0 };
 	float rotation = 0;
 	glm::vec2 pos = { 100, 100 };
-	glm::vec2 velocity;
 	glm::vec2 size = { 100, 100 };
 	glm::vec2 center = { size.x / 2, size.y / 2 };
 	glm::vec2 currentAtlasPoint;
 	float speed = 1;
+	float turningSpeed;
+	glm::vec2 enemyViewDirection = { 1,0 };
 	bool enableGravity = false;
 
 
