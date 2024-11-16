@@ -12,7 +12,7 @@
 #include <gl2d/gl2d.h>
 #include <platformTools.h>
 #include <tiledRenderer.h>
-#include <gameObject.h>
+#include <gameObject.hpp>
 
 
 struct playerData
@@ -98,6 +98,16 @@ void enemyMovement(float DT, gameObject &e) {
 	else{ newDirection = DT * e.turningSpeed * directionToPlayer + e.enemyViewDirection; }
 	e.enemyViewDirection = glm::normalize(newDirection);
 	e.pos += e.enemyViewDirection * DT * e.speed;
+}
+void spawnEnemy(float DT) {
+	glm::uvec2 enemyTypes[] = { {0,0}, {0,1}, {2,0}, {3, 1} };
+	gameObject e;
+	e.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, enemyTypes[rand() % 4], 128);
+	e.pos = player.pos;
+	e.setSize(playData.shipSize.x, playData.shipSize.y);
+	e.speed = 400 + rand() % 1000;
+	e.turningSpeed = 2.f + (rand() & 1000) / 500.0f;
+	playData.enemies.push_back(e);
 }
 
 
@@ -199,22 +209,18 @@ bool gameLogic(float deltaTime) {
 
 	player.movement = { 0, 0 };
 
+
+#pragma region ImGui
 	ImGui::Begin("debug");
+
 	ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
 	ImGui::Text("enemy count: %d \n", (int)playData.enemies.size());
+	ImGui::Text("object count: %d \n", (int)gameObject::currentObjectCount());
 	ImGui::Text("fps: %d \n", (int)(std::round(1 / deltaTime)));
-	if (!ImGui::Button("spawn enemy")) {
-		glm::uvec2 enemyTypes[] = { {0,0}, {0,1}, {2,0}, {3, 1} };
-		gameObject e;
-		e.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, enemyTypes[rand() % 4], 128);
-		e.pos = player.pos;
-		e.setSize(playData.shipSize.x, playData.shipSize.y);
-		e.speed = 400 + rand() % 1000;
-		e.turningSpeed = 2.f + (rand() & 1000) / 500.0f;
-		playData.enemies.push_back(e);
-	}
-	ImGui::End();
+	if (ImGui::Button("spawn enemy")) { spawnEnemy(deltaTime); }
 
+	ImGui::End();
+#pragma endregion
 
 	renderer.flush();
 	return true;

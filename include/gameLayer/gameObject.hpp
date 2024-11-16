@@ -7,7 +7,7 @@
 class gameObject {
 private:
 
-	int id;
+	int32_t id;
 
 	gl2d::Texture objectTexture;
 	gl2d::TextureAtlasPadding objectAtlas;
@@ -21,6 +21,7 @@ public:
 	void update(float, gl2d::Renderer2D&);
 	void gravity();
 	void setSize(float, float);
+	static int getObjectCount();
 	int getId();
 	bool isTheSameObject(gameObject);
 	void move(float);
@@ -31,7 +32,7 @@ public:
 	glm::vec2 center = { size.x / 2, size.y / 2 };
 	glm::vec2 currentAtlasPoint;
 	float speed = 1;
-	float turningSpeed;
+	float turningSpeed = 1;
 	glm::vec2 enemyViewDirection = { 1,0 };
 	bool enableGravity = false;
 

@@ -1,4 +1,4 @@
-#include "gameObject.h"
+#include "gameObject.hpp"
 #include <gl2d/gl2d.h>
 #include <iostream>
 
@@ -26,6 +26,10 @@ int loadOnceClass::checkTextures(const char* Texture, bool atlas, int atlasSize,
 	loadOnceClass::loadedTextures.push_back(t);
 	return std::distance(loadedTexturesNames.begin(), find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture));
 }
+int gameObject::getObjectCount() {
+	return objectCount;
+}
+
 
 //Creating the object and loading it's texture if it isn't loaded
 void gameObject::createObject(objectType type, const char* textureFile, textureType _currentTextureType
