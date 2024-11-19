@@ -8,6 +8,8 @@
 int objectCount = 0;
 loadOnceClass loadOnce;
 
+
+
 //Checks if the current texture is loaded or not and loads it if not
 int loadOnceClass::checkTextures(const char* Texture, bool atlas, int atlasSize, glm::vec2 atlasPoint) {
 	for (const char* T : loadedTexturesNames) {
