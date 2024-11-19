@@ -215,12 +215,14 @@ bool gameLogic(float deltaTime) {
 
 	ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
 	ImGui::Text("enemy count: %d \n", (int)playData.enemies.size());
-	ImGui::Text("object count: %d \n", (int)gameObject::currentObjectCount());
+	ImGui::Text("object count: %d \n", (int)gameObject::getObjectCount());
 	ImGui::Text("fps: %d \n", (int)(std::round(1 / deltaTime)));
 	if (ImGui::Button("spawn enemy")) { spawnEnemy(deltaTime); }
-
+	
 	ImGui::End();
 #pragma endregion
+	
+
 
 	renderer.flush();
 	return true;

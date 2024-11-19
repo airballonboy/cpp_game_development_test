@@ -1,6 +1,7 @@
 #include "gameObject.hpp"
 #include <gl2d/gl2d.h>
 #include <iostream>
+#include <algorithm>
 
 
 
@@ -11,7 +12,7 @@ loadOnceClass loadOnce;
 int loadOnceClass::checkTextures(const char* Texture, bool atlas, int atlasSize, glm::vec2 atlasPoint) {
 	for (const char* T : loadedTexturesNames) {
 		if (Texture == T) { return std::distance(loadedTexturesNames.begin() 
-			,find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture)); }
+			,std::find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture)); }
 	}
 	loadOnceClass::loadedTexturesNames.push_back(Texture);
 	gl2d::Texture t;
@@ -24,7 +25,7 @@ int loadOnceClass::checkTextures(const char* Texture, bool atlas, int atlasSize,
 		loadOnceClass::loadedTextureAtlases.push_back(tPadding);
 	}
 	loadOnceClass::loadedTextures.push_back(t);
-	return std::distance(loadedTexturesNames.begin(), find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture));
+	return std::distance(loadedTexturesNames.begin(), std::find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture));
 }
 int gameObject::getObjectCount() {
 	return objectCount;
