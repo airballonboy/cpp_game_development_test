@@ -222,7 +222,7 @@ bool gameLogic(float deltaTime) {
 	ImGui::End();
 #pragma endregion
 	
-
+  printFpsCounter(deltaTime);
 
 	renderer.flush();
 	return true;
