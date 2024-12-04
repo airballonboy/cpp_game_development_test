@@ -85,7 +85,8 @@ void bulletShooting(float DT, glm::vec2 mouseDirection) {
 		b.speed = 1500;
 		b.movement = mouseDirection;
 		b.setSize(50, 50);
-		b.createObject(gameObject::objectType::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png", gameObject::atlas, { 3,2 }, { 1,0 }, 500);
+		b.createObject(gameObject::objectType::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png",
+                 gameObject::atlas, { 3,2 }, { 1,0 }, 500);
 
 		playData.bullets.push_back(b);
 	}
@@ -116,12 +117,13 @@ bool initGame() {
 	gl2d::init();
 	renderer.create();
 	std::srand(std::time(0));
-
-	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, { 1,0 }, 128);
+  
+	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png",
+                     gameObject::atlas, { 5,2 }, { 1,0 }, 128);
 	player.setSize(playData.shipSize.x, playData.shipSize.y);
 	player.speed = playData.speed;
 
-
+  gl2d::Texture i;
 
 #pragma region background texture loading
 	backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
@@ -195,7 +197,10 @@ bool gameLogic(float deltaTime) {
 
 	for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
 	for (int i = 0; i < playData.bullets.size(); i++) {
-		if (glm::distance(playData.bullets[i].pos, player.pos) > 5000) { playData.bullets.erase(playData.bullets.begin() + i); i--; continue; }
+		if (glm::distance(playData.bullets[i].pos, player.pos) > 5000) { 
+      playData.bullets.erase(playData.bullets.begin() + i); i--; 
+      continue; 
+    }
 		playData.bullets[i].update(deltaTime, renderer);
 	}
 	for (auto& e : playData.enemies) { e.update(deltaTime, renderer); }
