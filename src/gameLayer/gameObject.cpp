@@ -1,6 +1,5 @@
 #include "gameObject.hpp"
 #include <gl2d/gl2d.h>
-#include <iostream>
 #include <algorithm>
 
 
@@ -35,19 +34,19 @@ int gameObject::getObjectCount() {
 
 
 //Creating the object and loading it's texture if it isn't loaded
-void gameObject::createObject(objectType type, const char* textureFile, textureType _currentTextureType
-								, glm::vec2 atlasPoint, glm::vec2 texturePoint, int atlasSize) {
+void gameObject::createObject(objectType _type, const char* _textureFile, textureType _currentTextureType
+			      , glm::vec2 _atlasPoint, glm::vec2 _texturePoint, int _atlasSize) {
 
 	objectCount++;
 	id = objectCount;
-	currentAtlasPoint = texturePoint;
+	currentAtlasPoint = _texturePoint;
 	currentTextureType = _currentTextureType;
-	currentType = type;
+	currentType = _type;
 	if (currentTextureType == normal) {
-		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(textureFile, false)];
+		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, false)];
 	} else if (currentTextureType == atlas) {
-		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(textureFile, true, atlasSize, atlasPoint)];
-		objectAtlas = loadOnce.loadedTextureAtlases[loadOnce.checkTextures(textureFile, true, atlasSize, atlasPoint)];
+		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, true, _atlasSize, _atlasPoint)];
+		objectAtlas = loadOnce.loadedTextureAtlases[loadOnce.checkTextures(_textureFile, true, _atlasSize, _atlasPoint)];
 	}
 }
 
