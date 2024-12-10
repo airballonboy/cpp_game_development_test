@@ -3,9 +3,9 @@
 
 linux:
 
-cd out
-cmake ..
-make
+cd out \n
+cmake .. \n
+make \n
 ./spaceGame
 
 note:
@@ -17,6 +17,8 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
 windows:
 
 see the rest
+
+
 
 ---
 
