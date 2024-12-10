@@ -1,7 +1,22 @@
-# about me
+#How to compile and run the code?
+---
+
+linux:
+
+cd out
+cmake ..
+make
+./spaceGame
+
+note:
+if it's your first time using code and using clangd type this first
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
 
 ---
-i'm Ahmed 
+
+windows:
+
+see the rest
 
 ---
 
