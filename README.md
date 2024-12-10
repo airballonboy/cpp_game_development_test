@@ -1,11 +1,14 @@
 #How to compile and run the code?
 ---
 
-linux:
+<h2>linux:</h2>
 
-cd out \n
-cmake .. \n
-make \n
+cd out
+
+cmake ..
+
+make
+
 ./spaceGame
 
 note:
