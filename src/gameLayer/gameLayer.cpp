@@ -6,7 +6,6 @@
 #include "platformInput.h"
 #include "imgui.h"
 #include <iostream>
-#include <sstream>
 #include <cstdio>
 #include "imfilebrowser.h"
 #include <gl2d/gl2d.h>
@@ -15,6 +14,7 @@
 #include <gameObject.hpp>
 
 
+//save data
 struct playerData
 {
 	glm::vec2 shipSize = { 250.f, 250.f };
@@ -25,7 +25,8 @@ struct playerData
 	std::vector<gameObject> enemies;
 } playData;
 
-#pragma region declerations
+
+//declarations
 gl2d::Renderer2D renderer;
 float fpsCurrentTimer;
 float fps;
@@ -33,7 +34,6 @@ const int BGs = 4;
 gl2d::Texture backGroundTexture[BGs];
 TiledRenderer tiledRenderer[BGs];
 gameObject player;
-#pragma endregion
 
 
 
@@ -86,24 +86,30 @@ void bulletShooting(float DT, glm::vec2 mouseDirection) {
 		b.movement = mouseDirection;
 		b.setSize(50, 50);
 		b.createObject(gameObject::objectType::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png",
-                 gameObject::atlas, { 3,2 }, { 1,0 }, 500);
+		 gameObject::atlas, { 3,2 }, { 1,0 }, 500);
 
 		playData.bullets.push_back(b);
 	}
 }
 void enemyMovement(float DT, gameObject &e) {
 	glm::vec2 directionToPlayer = player.pos - e.pos;
-	if (glm::length(directionToPlayer) == 0) { directionToPlayer = { 1,0 }; } else { directionToPlayer = glm::normalize(directionToPlayer); }
+	
+	if (glm::length(directionToPlayer) == 0) { directionToPlayer = { 1,0 }; }
+	else { directionToPlayer = glm::normalize(directionToPlayer); }
+	
 	glm::vec2 newDirection = {};
-	if (glm::length(directionToPlayer + e.enemyViewDirection) <= 0.2f){ newDirection = glm::vec2(directionToPlayer.y, -directionToPlayer.x); } 
-	else{ newDirection = DT * e.turningSpeed * directionToPlayer + e.enemyViewDirection; }
+	if (glm::length(directionToPlayer + e.enemyViewDirection) <= 0.2f){ 
+		newDirection = glm::vec2(directionToPlayer.y, -directionToPlayer.x);
+	} else{ newDirection = DT * e.turningSpeed * directionToPlayer + e.enemyViewDirection; }
+	
 	e.enemyViewDirection = glm::normalize(newDirection);
 	e.pos += e.enemyViewDirection * DT * e.speed;
 }
 void spawnEnemy(float DT) {
 	glm::uvec2 enemyTypes[] = { {0,0}, {0,1}, {2,0}, {3, 1} };
 	gameObject e;
-	e.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, enemyTypes[rand() % 4], 128);
+	e.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png",
+		gameObject::atlas, { 5,2 }, enemyTypes[rand() % 4], 128);
 	e.pos = player.pos;
 	e.setSize(playData.shipSize.x, playData.shipSize.y);
 	e.speed = 400 + rand() % 1000;
@@ -118,20 +124,19 @@ bool initGame() {
 	renderer.create();
 	std::srand(std::time(0));
   
+
+	//player creation
 	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png",
                      gameObject::atlas, { 5,2 }, { 1,0 }, 128);
 	player.setSize(playData.shipSize.x, playData.shipSize.y);
 	player.speed = playData.speed;
 
-  gl2d::Texture i;
 
-#pragma region background texture loading
+	//background texture init
 	backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
 	backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true);
 	backGroundTexture[2].loadFromFile(RESOURCES_PATH "background3.png", true);
 	backGroundTexture[3].loadFromFile(RESOURCES_PATH "background4.png", true);
-
-
 
 	tiledRenderer[0].texture = backGroundTexture[0];
 	tiledRenderer[1].texture = backGroundTexture[1];
@@ -141,7 +146,6 @@ bool initGame() {
 	tiledRenderer[1].paralaxStrength = 0.2;
 	tiledRenderer[2].paralaxStrength = 0.4;
 	tiledRenderer[3].paralaxStrength = 0.7;
-#pragma endregion 
 
 	return true;
 }
@@ -149,85 +153,66 @@ bool initGame() {
 
 
 bool gameLogic(float deltaTime) {
-#pragma region init stuff
+	//init after the flush
 	int w = 0; int h = 0;
 	w = platform::getFrameBufferSizeX(); //window w
 	h = platform::getFrameBufferSizeY(); //window h
-
 	glViewport(0, 0, w, h);
 	glClear(GL_COLOR_BUFFER_BIT); //clear screen
-
 	renderer.updateWindowMetrics(w, h);
-#pragma endregion
 
-#pragma region mouse pos
 
+
+	//mouse direction checking
 	glm::vec2 mousePos = platform::getRelMousePosition();
 	glm::vec2 screenCenter(player.pos - renderer.currentCamera.position);
 	glm::vec2 mouseDirection = mousePos - screenCenter;
-
 	if (glm::length(mouseDirection) == 0.f) {
 		mouseDirection = { 1,0 };
 	} else {
 		mouseDirection = normalize(mouseDirection);
 	}
-
 	player.rotation = atan2(mouseDirection.y, -mouseDirection.x);
 	platform::showMouse(playData.mouseShowing);
 
-#pragma endregion
 
-#pragma region camera settings
-
+	//camera setup
 	renderer.currentCamera.zoom = playData.cameraSize;
 	renderer.currentCamera.follow(player.pos, deltaTime * 450, 10, 50, w, h);
 
-#pragma endregion
-
-#pragma region input checking
-
+	
+	//update entities and key checks
 	playerMove(deltaTime);
 	cameraSizeChange(deltaTime);
 	bulletShooting(deltaTime, mouseDirection);
 	for (auto& e : playData.enemies) { enemyMovement(deltaTime, e); }
 
-#pragma endregion
 
-#pragma region rendering
-
+	//rendering everything
 	for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
 	for (int i = 0; i < playData.bullets.size(); i++) {
 		if (glm::distance(playData.bullets[i].pos, player.pos) > 5000) { 
-      playData.bullets.erase(playData.bullets.begin() + i); i--; 
-      continue; 
-    }
+			playData.bullets.erase(playData.bullets.begin() + i); i--; continue; 
+		}
 		playData.bullets[i].update(deltaTime, renderer);
 	}
 	for (auto& e : playData.enemies) { e.update(deltaTime, renderer); }
-
-
 	player.update(deltaTime, renderer);
 
-#pragma endregion
 
-	//printFpsCounter(deltaTime);
-
+	//reset player movmemt
 	player.movement = { 0, 0 };
 
 
-#pragma region ImGui
+	//imGui debug ui
 	ImGui::Begin("debug");
-
 	ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
 	ImGui::Text("enemy count: %d \n", (int)playData.enemies.size());
 	ImGui::Text("object count: %d \n", (int)gameObject::getObjectCount());
 	ImGui::Text("fps: %d \n", (int)(std::round(1 / deltaTime)));
 	if (ImGui::Button("spawn enemy")) { spawnEnemy(deltaTime); }
-	
 	ImGui::End();
-#pragma endregion
 	
-  printFpsCounter(deltaTime);
 
 	renderer.flush();
 	return true;

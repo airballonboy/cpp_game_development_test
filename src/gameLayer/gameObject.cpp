@@ -1,6 +1,5 @@
 #include "gameObject.hpp"
 #include <gl2d/gl2d.h>
-#include <iostream>
 #include <algorithm>
 
 
@@ -36,7 +35,7 @@ int gameObject::getObjectCount() {
 
 //Creating the object and loading it's texture if it isn't loaded
 void gameObject::createObject(objectType _type, const char* _textureFile, textureType _currentTextureType
-								, glm::vec2 _atlasPoint, glm::vec2 _texturePoint, int _atlasSize) {
+			      , glm::vec2 _atlasPoint, glm::vec2 _texturePoint, int _atlasSize) {
 
 	objectCount++;
 	id = objectCount;
