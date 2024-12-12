@@ -20,22 +20,24 @@ public:
 	void createObject(objectType, const char*, textureType = normal, glm::vec2 = { 1, 1 }, glm::vec2 = { 0, 0 }, int = 128);
 	void update(float, gl2d::Renderer2D&);
 	void gravity();
+    bool checkColission(gameObject);
 	void setSize(float, float);
 	static int getObjectCount();
 	int getId();
 	bool isTheSameObject(gameObject);
 	void move(float);
-	glm::vec2 movement = { 0, 0 };
+    float baseGravity = 9.8;
 	float rotation = 0;
-	glm::vec2 pos = { 100, 100 };
-	glm::vec2 size = { 100, 100 };
-	glm::vec2 center = { size.x / 2, size.y / 2 };
-	glm::vec2 currentAtlasPoint;
-	float speed = 1;
 	float turningSpeed = 1;
+	glm::vec2 acc = { 0, 0 };//Acceleration
+    glm::vec2 vel = { 0, 0 };//Velocity
+	glm::vec2 pos = { 100, 100 };//Position
+	glm::vec2 dim = { 100, 100 };//Dimensions
+	glm::vec2 center = { dim.x / 2, dim.y / 2 };
+	glm::vec2 currentAtlasPoint;
 	glm::vec2 enemyViewDirection = { 1,0 };
 	bool enableGravity = false;
-
+    bool enableCollision = false;
 
 
 
