@@ -2,12 +2,17 @@
 #include <cstring>
 #include <gl2d/gl2d.h>
 #include <algorithm>
+#include <ostream>
+#include <vector>
+#include <iostream>
+#include <memory>
 
 
 
 int objectCount = 0;
 loadOnceClass loadOnce;
-
+// Definition of static member
+std::vector<gameObject*> gameObject::gameObjects;
 
 
 //Checks if the current texture is loaded or not and loads it if not
@@ -33,14 +38,17 @@ int gameObject::getObjectCount() {
 	return objectCount;
 }
 
+gameObject::~gameObject(){
+
+}
 
 //Creating the object and loading it's texture if it isn't loaded
-void gameObject::createObject(objectType _type, const char* _textureFile, textureType _currentTextureType
-			      , glm::vec2 _atlasPoint, glm::vec2 _texturePoint, int _atlasdim) {
+gameObject::gameObject(objectType _type, const char* _textureFile, textureType _currentTextureType
+                            , glm::vec2 _atlasPoint, glm::vec2 _texturePoint, int _atlasdim) {
 
 	objectCount++;
 	id = objectCount;
-	currentAtlasPoint = _texturePoint;
+	currentTextureCoords = _texturePoint;
 	currentTextureType = _currentTextureType;
 	currentType = _type;
 	if (currentTextureType == normal) {
@@ -49,6 +57,10 @@ void gameObject::createObject(objectType _type, const char* _textureFile, textur
 		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, true, _atlasdim, _atlasPoint)];
 		objectAtlas = loadOnce.loadedTextureAtlases[loadOnce.checkTextures(_textureFile, true, _atlasdim, _atlasPoint)];
 	}
+    //gameObjects.push_back(this); 
+}
+gameObject::gameObject(){
+    
 }
 
 //Checks if two objects are the same
@@ -70,7 +82,7 @@ void gameObject::setSize(float newdimX, float newdimY) {
 void gameObject::gravity() {
 	//TODO add collision detection and gravity system
     acc = { acc.x, (acc.y + baseGravity) };
-    //Call collision detection here too?
+    //Call collmpision detection here too?
 }
 bool gameObject::checkColission(gameObject currentObject){
     //TODO make collision checks
@@ -85,16 +97,61 @@ void gameObject::move(float deltaTime) {
 	acc += acc * deltaTime * vel;
 }
 
+
+void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
+    for (int i = 0; i < gameObjects.size(); i++){
+        printObjectState(*gameObjects[i]);
+        update2(deltaTime, renderer, gameObjects[i]);
+    }
+}
+void gameObject::update2(float deltaTime, gl2d::Renderer2D& renderer, gameObject* thus){
+    gameObject that = *thus;
+    printObjectState(that);
+	//if (that.enableGravity) { that.gravity(); }
+	//if (that.acc != glm::vec2{0, 0}) { that.move(deltaTime); that.pos += that.acc; }
+	if (that.currentTextureType == gameObject::normal) {
+		renderer.renderRectangle({ (that.pos.x - that.center.x), (that.pos.y - that.center.y), that.dim }, that.objectTexture,
+			Colors_White, {}, glm::degrees(that.rotation) + 90.f);
+	} else if (that.currentTextureType == gameObject::atlas) {
+		renderer.renderRectangle({ (that.pos.x - that.center.x), (that.pos.y - that.center.y), that.dim }, that.objectTexture,
+			Colors_White, {}, glm::degrees(that.rotation) + 90.f, that.objectAtlas.get(that.currentTextureCoords.x, that.currentTextureCoords.y));
+	}
+}
+void gameObject::printObjectState(gameObject object){
+    std::cout << "---------------------------------------------------" << std::endl;
+    std::cout << "id: " << object.id<< std::endl;
+    std::cout << "currentTextureType: " << object.currentTextureType<< std::endl;
+    std::cout << "currentType: " << object.currentType<< std::endl;
+    std::cout << "baseGravity: " << object.baseGravity<< std::endl;
+    std::cout << "rotation: " << object.rotation<< std::endl;
+    std::cout << "turningSpeed: " << object.turningSpeed<< std::endl;
+    std::cout << "acc.x: " << object.acc.x<< std::endl;
+    std::cout << "acc.y: " << object.acc.y<< std::endl;
+    std::cout << "vel.x: " << object.vel.x<< std::endl;
+    std::cout << "vel.y: " << object.vel.y<< std::endl;
+    std::cout << "pos.x: " << object.pos.x<< std::endl;
+    std::cout << "pos.y: " << object.pos.y<< std::endl;
+    std::cout << "dim.x: " << object.dim.x<< std::endl;
+    std::cout << "dim.y: " << object.dim.y<< std::endl;
+    std::cout << "center.x: " << object.center.x<< std::endl;
+    std::cout << "center.y: " << object.center.y<< std::endl;
+    std::cout << "currentTextureCoords.x: " << object.currentTextureCoords.x<< std::endl;
+    std::cout << "currentTextureCoords.y: " << object.currentTextureCoords.y<< std::endl;
+    std::cout << "enableGravity: " << object.enableGravity<< std::endl;
+    std::cout << "enableCollision: " << object.enableCollision<< std::endl;
+
+
+    std::cout << "---------------------------------------------------" << std::endl;
+}
 void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 	if (enableGravity) { this->gravity(); }
 	if (acc != glm::vec2{0, 0}) { this->move(deltaTime); this->pos += acc; }
-
 	if (currentTextureType == normal) {
 		renderer.renderRectangle({ (pos.x - center.x), (pos.y - center.y), dim }, objectTexture,
 			Colors_White, {}, glm::degrees(this->rotation) + 90.f);
 	} else if (currentTextureType == atlas) {
 		renderer.renderRectangle({ (pos.x - center.x), (pos.y - center.y), dim }, objectTexture,
-			Colors_White, {}, glm::degrees(this->rotation) + 90.f, objectAtlas.get(currentAtlasPoint.x, currentAtlasPoint.y));
+			Colors_White, {}, glm::degrees(this->rotation) + 90.f, objectAtlas.get(currentTextureCoords.x, currentTextureCoords.y));
 	}
 }
 

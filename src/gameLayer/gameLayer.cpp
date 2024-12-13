@@ -38,7 +38,37 @@ gameObject player;
 
 
 
+bool initGame() {
+	//Initializing stuff for the renderer
+	gl2d::init();
+	renderer.create();
+	std::srand(std::time(0));
+    //Player creation
+    player = gameObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, { 1,0 }, 128);
 
+
+	player.setSize(playData.shipSize.x, playData.shipSize.y);
+	player.vel = playData.vel;
+
+
+    {//Background texture init
+        backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
+        backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true);
+        backGroundTexture[2].loadFromFile(RESOURCES_PATH "background3.png", true);
+        backGroundTexture[3].loadFromFile(RESOURCES_PATH "background4.png", true);
+
+        tiledRenderer[0].texture = backGroundTexture[0];
+        tiledRenderer[1].texture = backGroundTexture[1];
+        tiledRenderer[2].texture = backGroundTexture[2];
+        tiledRenderer[3].texture = backGroundTexture[3];
+        tiledRenderer[0].paralaxStrength = 0.f;
+        tiledRenderer[1].paralaxStrength = 0.2f;
+        tiledRenderer[2].paralaxStrength = 0.4f;
+        tiledRenderer[3].paralaxStrength = 0.7f;
+    }
+
+	return true;
+}
 
 
 
@@ -79,14 +109,13 @@ void cameraSizeChange(float DT) {
 }
 void bulletShooting(float DT, glm::vec2 mouseDirection) {
 	if (platform::isLMousePressed()) {
-		gameObject b;
+        gameObject b(gameObject::objectType::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png", 
+                        gameObject::atlas, { 3,2 }, { 1,0 }, 500);
 		b.pos = player.pos;
 		b.rotation = player.rotation;
 		b.vel = { 1500, 1500 };
 		b.acc = mouseDirection;
 		b.setSize(50, 50);
-		b.createObject(gameObject::objectType::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png",
-		 gameObject::atlas, { 3,2 }, { 1,0 }, 500);
 
 		playData.bullets.push_back(b);
 	}
@@ -107,9 +136,8 @@ void enemyacc(float DT, gameObject &e) {
 }
 void spawnEnemy(float DT) {
 	glm::uvec2 enemyTypes[] = { {0,0}, {0,1}, {2,0}, {3, 1} };
-	gameObject e;
-	e.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png",
-		gameObject::atlas, { 5,2 }, enemyTypes[rand() % 4], 128);
+	gameObject e(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png",
+		            gameObject::atlas, { 5,2 }, enemyTypes[rand() % 4], 128);
 	e.pos = player.pos;
 	e.setSize(playData.shipSize.x, playData.shipSize.y);
     float newVel = 400 + rand() % 1000;
@@ -119,38 +147,6 @@ void spawnEnemy(float DT) {
 }
 
 
-bool initGame() {
-	//Initializing stuff for the renderer
-	gl2d::init();
-	renderer.create();
-	std::srand(std::time(0));
-  
-
-	//Player creation
-	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png",
-                     gameObject::atlas, { 5,2 }, { 1,0 }, 128);
-	player.setSize(playData.shipSize.x, playData.shipSize.y);
-	player.vel = playData.vel;
-
-
-    {//Background texture init
-        backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
-        backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true);
-        backGroundTexture[2].loadFromFile(RESOURCES_PATH "background3.png", true);
-        backGroundTexture[3].loadFromFile(RESOURCES_PATH "background4.png", true);
-
-        tiledRenderer[0].texture = backGroundTexture[0];
-        tiledRenderer[1].texture = backGroundTexture[1];
-        tiledRenderer[2].texture = backGroundTexture[2];
-        tiledRenderer[3].texture = backGroundTexture[3];
-        tiledRenderer[0].paralaxStrength = 0;
-        tiledRenderer[1].paralaxStrength = 0.2;
-        tiledRenderer[2].paralaxStrength = 0.4;
-        tiledRenderer[3].paralaxStrength = 0.7;
-    }
-
-	return true;
-}
 
 
 
@@ -191,15 +187,16 @@ bool gameLogic(float deltaTime) {
 
 
 	//Rendering everything
-	for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
+    for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
 	for (int i = 0; i < playData.bullets.size(); i++) {
 		if (glm::distance(playData.bullets[i].pos, player.pos) > 5000) { 
 			playData.bullets.erase(playData.bullets.begin() + i); i--; continue; 
 		}
-		playData.bullets[i].update(deltaTime, renderer);
+        playData.bullets[i].update(deltaTime, renderer);
 	}
 	for (auto& e : playData.enemies) { e.update(deltaTime, renderer); }
 	player.update(deltaTime, renderer);
+    //gameObject::updateAll(deltaTime, renderer);
 
 
 	//Reset player acc
