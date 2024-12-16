@@ -5,14 +5,13 @@
 #include <ostream>
 #include <vector>
 #include <iostream>
-#include <memory>
 
 
 
 int objectCount = 0;
 loadOnceClass loadOnce;
 // Definition of static member
-std::vector<gameObject*> gameObject::gameObjects;
+std::vector<gameObject> gameObject::gameObjects;
 
 
 //Checks if the current texture is loaded or not and loads it if not
@@ -57,7 +56,7 @@ gameObject::gameObject(objectType _type, const char* _textureFile, textureType _
 		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, true, _atlasdim, _atlasPoint)];
 		objectAtlas = loadOnce.loadedTextureAtlases[loadOnce.checkTextures(_textureFile, true, _atlasdim, _atlasPoint)];
 	}
-    //gameObjects.push_back(this); 
+    gameObjects.emplace_back(*this); 
 }
 gameObject::gameObject(){
     
@@ -70,20 +69,6 @@ bool gameObject::isTheSameObject(gameObject otherObject) {
 	} else { return false; }
 }
 
-int gameObject::getId() {
-	return this->id;
-}
-
-void gameObject::setSize(float newdimX, float newdimY) {
-	dim = { newdimX, newdimY };
-	center = { this->dim.x / 2, this->dim.y / 2 };
-}
-
-void gameObject::gravity() {
-	//TODO add collision detection and gravity system
-    acc = { acc.x, (acc.y + baseGravity) };
-    //Call collmpision detection here too?
-}
 bool gameObject::checkColission(gameObject currentObject){
     //TODO make collision checks
     if (enableCollision) {
@@ -93,32 +78,34 @@ bool gameObject::checkColission(gameObject currentObject){
     return false;
 }
 void gameObject::move(float deltaTime) {
-	acc = glm::normalize(acc);
-	acc += acc * deltaTime * vel;
+    glm::vec2 normalizedAcc = glm::normalize(acc);
+	this->setAcc(normalizedAcc.x + (normalizedAcc.x * deltaTime * vel.x), normalizedAcc.y + (normalizedAcc.y * deltaTime * vel.y));
 }
 
+void gameObject::gravity() {
+	//TODO add collision detection and gravity system
+    acc = { acc.x, (acc.y + baseGravity) };
+    //Call collision detection here too?
+}
 
 void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
-    for (int i = 0; i < gameObjects.size(); i++){
-        printObjectState(*gameObjects[i]);
-        update2(deltaTime, renderer, gameObjects[i]);
+    for (auto go : gameObjects){
+        update2(deltaTime, renderer, go);
     }
 }
-void gameObject::update2(float deltaTime, gl2d::Renderer2D& renderer, gameObject* thus){
-    gameObject that = *thus;
-    printObjectState(that);
-	//if (that.enableGravity) { that.gravity(); }
-	//if (that.acc != glm::vec2{0, 0}) { that.move(deltaTime); that.pos += that.acc; }
+void gameObject::update2(float deltaTime, gl2d::Renderer2D& renderer, gameObject that){
+	if (that.enableGravity) { that.gravity(); }
+	if (that.acc != glm::vec2{0, 0}) { that.move(deltaTime); that.setPos(that.pos.x + that.acc.x, that.pos.y + that.acc.y); }
 	if (that.currentTextureType == gameObject::normal) {
-		renderer.renderRectangle({ (that.pos.x - that.center.x), (that.pos.y - that.center.y), that.dim }, that.objectTexture,
+		renderer.renderRectangle({ (that.pos.x - that.pivot.x), (that.pos.y - that.pivot.y), that.dim }, that.objectTexture,
 			Colors_White, {}, glm::degrees(that.rotation) + 90.f);
 	} else if (that.currentTextureType == gameObject::atlas) {
-		renderer.renderRectangle({ (that.pos.x - that.center.x), (that.pos.y - that.center.y), that.dim }, that.objectTexture,
-			Colors_White, {}, glm::degrees(that.rotation) + 90.f, that.objectAtlas.get(that.currentTextureCoords.x, that.currentTextureCoords.y));
+		renderer.renderRectangle({ (that.pos.x - that.pivot.x), (that.pos.y - that.pivot.y), that.dim }, that.objectTexture, Colors_White, {},
+            glm::degrees(that.rotation) + 90.f, that.objectAtlas.get(that.currentTextureCoords.x, that.currentTextureCoords.y));
 	}
 }
-void gameObject::printObjectState(gameObject object){
-    std::cout << "---------------------------------------------------" << std::endl;
+void gameObject::printObjectState(gameObject* objectPtr){
+    gameObject object = *objectPtr;
     std::cout << "id: " << object.id<< std::endl;
     std::cout << "currentTextureType: " << object.currentTextureType<< std::endl;
     std::cout << "currentType: " << object.currentType<< std::endl;
@@ -133,8 +120,8 @@ void gameObject::printObjectState(gameObject object){
     std::cout << "pos.y: " << object.pos.y<< std::endl;
     std::cout << "dim.x: " << object.dim.x<< std::endl;
     std::cout << "dim.y: " << object.dim.y<< std::endl;
-    std::cout << "center.x: " << object.center.x<< std::endl;
-    std::cout << "center.y: " << object.center.y<< std::endl;
+    std::cout << "pivot.x: " << object.pivot.x<< std::endl;
+    std::cout << "pivot.y: " << object.pivot.y<< std::endl;
     std::cout << "currentTextureCoords.x: " << object.currentTextureCoords.x<< std::endl;
     std::cout << "currentTextureCoords.y: " << object.currentTextureCoords.y<< std::endl;
     std::cout << "enableGravity: " << object.enableGravity<< std::endl;
@@ -147,11 +134,102 @@ void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 	if (enableGravity) { this->gravity(); }
 	if (acc != glm::vec2{0, 0}) { this->move(deltaTime); this->pos += acc; }
 	if (currentTextureType == normal) {
-		renderer.renderRectangle({ (pos.x - center.x), (pos.y - center.y), dim }, objectTexture,
+		renderer.renderRectangle({ (pos.x - pivot.x), (pos.y - pivot.y), dim }, objectTexture,
 			Colors_White, {}, glm::degrees(this->rotation) + 90.f);
 	} else if (currentTextureType == atlas) {
-		renderer.renderRectangle({ (pos.x - center.x), (pos.y - center.y), dim }, objectTexture,
+		renderer.renderRectangle({ (pos.x - pivot.x), (pos.y - pivot.y), dim }, objectTexture,
 			Colors_White, {}, glm::degrees(this->rotation) + 90.f, objectAtlas.get(currentTextureCoords.x, currentTextureCoords.y));
 	}
 }
+
+int gameObject::getId() {
+	return this->id;
+}
+
+void gameObject::setDim(float newDimX, float newDimY) {
+	this->dim = { newDimX, newDimY };
+	this->pivot = { this->dim.x / 2, this->dim.y / 2 };
+    gameObjects[(this->id - 1)].dim = this->dim;
+    gameObjects[(this->id - 1)].pivot = this->pivot;
+}
+void gameObject::setAcc(float newAccX, float newAccY){
+    this->acc = { newAccX, newAccY };
+    gameObjects[(this->id - 1)].acc = this->acc;
+}
+void gameObject::setVel(float newVelX, float newVelY){
+    this->vel = { newVelX, newVelY };
+    gameObjects[(this->id - 1)].vel = this->vel;
+}
+void gameObject::setPos(float newPosX, float newPosY){
+    this->pos = { newPosX, newPosY };
+    gameObjects[(this->id - 1)].pos = this->pos;
+}
+void gameObject::setPivot(float newPivotX, float newPivotY){
+    this->pivot = { newPivotX, newPivotY };
+    gameObjects[(this->id - 1)].pivot = this->pivot;
+}
+void gameObject::setEnemyViewDirection(glm::vec2 newDir){
+    this->enemyViewDirection = newDir;
+    gameObjects[(this->id - 1)].enemyViewDirection = this->enemyViewDirection;
+}
+void gameObject::setGravityBool(bool newGravityBool){
+    this->enableGravity = newGravityBool;
+    gameObjects[(this->id - 1)].enableGravity = this->enableGravity;
+}
+void gameObject::setCollisionBool(bool newCollisionBool){
+    this->enableCollision = newCollisionBool;
+    gameObjects[(this->id - 1)].enableCollision = this->enableCollision;
+}
+void gameObject::setBaseGravity(float newBaseGravity){
+    this->baseGravity = newBaseGravity;
+    gameObjects[(this->id - 1)].baseGravity = this->baseGravity;
+}
+void gameObject::setRotation(float newRotation){
+    this->rotation = newRotation;
+    gameObjects[(this->id - 1)].rotation = this->rotation;
+}
+void gameObject::setTurningSpeed(float newTurningSpeed){
+    this->turningSpeed = newTurningSpeed;
+    gameObjects[(this->id - 1)].turningSpeed = this->turningSpeed;
+}
+
+
+
+
+
+glm::vec2 gameObject::getDim() {
+    return gameObjects[(this->id - 1)].dim;
+}
+glm::vec2 gameObject::getAcc(){
+    return gameObjects[(this->id - 1)].acc;
+}
+glm::vec2 gameObject::getVel(){
+    return gameObjects[(this->id - 1)].vel;
+}
+glm::vec2 gameObject::getPos(){
+    return gameObjects[(this->id - 1)].pos;
+}
+glm::vec2 gameObject::getPivot(){
+    return gameObjects[(this->id - 1)].pivot;
+}
+glm::vec2 gameObject::getEnemyViewDirection(){
+    return gameObjects[(this->id - 1)].enemyViewDirection;
+}
+bool gameObject::getGravityBool(){
+    return gameObjects[(this->id - 1)].enableGravity;
+}
+bool gameObject::getCollisionBool(){
+    return gameObjects[(this->id - 1)].enableCollision;
+}
+float gameObject::getBaseGravity(){
+    return gameObjects[(this->id - 1)].baseGravity;
+}
+float gameObject::getRotation(){
+    return gameObjects[(this->id - 1)].rotation;
+}
+float gameObject::getTurningSpeed(){
+    return gameObjects[(this->id - 1)].turningSpeed;
+}
+
+
 
