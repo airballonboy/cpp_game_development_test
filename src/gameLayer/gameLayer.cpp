@@ -1,3 +1,4 @@
+#include "glm/geometric.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "gameLayer.h"
 #include <glad/glad.h>
@@ -14,19 +15,19 @@
 #include <gameObject.hpp>
 
 
-//save data
+//Save data
 struct playerData
 {
-	glm::vec2 shipSize = { 250.f, 250.f };
-	float speed = 500.0f;
-	float cameraSize = 0.4f;
-	bool mouseShowing = true;
-	std::vector<gameObject> bullets;
-	std::vector<gameObject> enemies;
+    glm::vec2 shipSize = { 250.f, 250.f };
+    glm::vec2 vel = { 500.0f, 500.0f };
+    float cameraSize = 0.4f;
+    bool mouseShowing = true;
+    std::vector<gameObject> bullets;
+    std::vector<gameObject> enemies;
 } playData;
 
 
-//declarations
+//Declarations
 gl2d::Renderer2D renderer;
 float fpsCurrentTimer;
 float fps;
@@ -38,7 +39,37 @@ gameObject player;
 
 
 
+bool initGame() {
+	//Initializing stuff for the renderer
+	gl2d::init();
+	renderer.create();
+	std::srand(std::time(0));
+    //Player creation
+    player = gameObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, { 1,0 }, 128);
 
+
+	player.setDim(playData.shipSize.x, playData.shipSize.y);
+	player.setVel(playData.vel.x, playData.vel.y);
+
+
+    {//Background texture init
+        backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
+        backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true);
+        backGroundTexture[2].loadFromFile(RESOURCES_PATH "background3.png", true);
+        backGroundTexture[3].loadFromFile(RESOURCES_PATH "background4.png", true);
+
+        tiledRenderer[0].texture = backGroundTexture[0];
+        tiledRenderer[1].texture = backGroundTexture[1];
+        tiledRenderer[2].texture = backGroundTexture[2];
+        tiledRenderer[3].texture = backGroundTexture[3];
+        tiledRenderer[0].paralaxStrength = 0.f;
+        tiledRenderer[1].paralaxStrength = 0.2f;
+        tiledRenderer[2].paralaxStrength = 0.4f;
+        tiledRenderer[3].paralaxStrength = 0.7f;
+    }
+
+	return true;
+}
 
 
 
@@ -53,16 +84,16 @@ void printFpsCounter(float deltaTime) {
 }
 void playerMove(float DT) {
 	if (platform::isButtonHeld(platform::Button::W) || platform::isButtonHeld(platform::Button::Up)) {
-		player.movement.y = -1;
+		player.setAcc(player.getAcc().x, -1);
 	}
 	if (platform::isButtonHeld(platform::Button::S) || platform::isButtonHeld(platform::Button::Down)) {
-		player.movement.y = 1;
+		player.setAcc(player.getAcc().x, 1);
 	}
 	if (platform::isButtonHeld(platform::Button::A) || platform::isButtonHeld(platform::Button::Left)) {
-		player.movement.x = -1;
+		player.setAcc(-1, player.getAcc().y);
 	}
 	if (platform::isButtonHeld(platform::Button::D) || platform::isButtonHeld(platform::Button::Right)) {
-		player.movement.x = 1;
+		player.setAcc(1, player.getAcc().y);
 	}
 }
 void cameraSizeChange(float DT) {
@@ -79,146 +110,115 @@ void cameraSizeChange(float DT) {
 }
 void bulletShooting(float DT, glm::vec2 mouseDirection) {
 	if (platform::isLMousePressed()) {
-		gameObject b;
-		b.pos = player.pos;
-		b.rotation = player.rotation;
-		b.speed = 1500;
-		b.movement = mouseDirection;
-		b.setSize(50, 50);
-		b.createObject(gameObject::objectType::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png",
-		 gameObject::atlas, { 3,2 }, { 1,0 }, 500);
+        gameObject b(gameObject::objectType::bullet, RESOURCES_PATH "spaceShip/stitchedFiles/projectiles.png", 
+                        gameObject::atlas, { 3,2 }, { 1,0 }, 500);
+		b.setPos(player.getPos().x, player.getPos().y);
+		b.setRotation(player.getRotation());
+		b.setVel(1500, 1500);
+		b.setAcc(mouseDirection.x, mouseDirection.y);
+		b.setDim(50, 50);
 
 		playData.bullets.push_back(b);
 	}
 }
-void enemyMovement(float DT, gameObject &e) {
-	glm::vec2 directionToPlayer = player.pos - e.pos;
+void enemyacc(float DT, gameObject &e) {
+	glm::vec2 directionToPlayer = player.getPos() - e.getPos();
 	
 	if (glm::length(directionToPlayer) == 0) { directionToPlayer = { 1,0 }; }
 	else { directionToPlayer = glm::normalize(directionToPlayer); }
 	
 	glm::vec2 newDirection = {};
-	if (glm::length(directionToPlayer + e.enemyViewDirection) <= 0.2f){ 
+	if (glm::length(directionToPlayer + e.getEnemyViewDirection()) <= 0.2f){ 
 		newDirection = glm::vec2(directionToPlayer.y, -directionToPlayer.x);
-	} else{ newDirection = DT * e.turningSpeed * directionToPlayer + e.enemyViewDirection; }
+	} else{ newDirection = DT * e.getTurningSpeed() * directionToPlayer + e.getEnemyViewDirection(); }
 	
-	e.enemyViewDirection = glm::normalize(newDirection);
-	e.pos += e.enemyViewDirection * DT * e.speed;
+	e.setEnemyViewDirection(glm::normalize(newDirection));
+	e.setPos(e.getPos().x + e.getEnemyViewDirection().x * DT * e.getVel().x, e.getPos().y + e.getEnemyViewDirection().y * DT * e.getVel().y);
 }
 void spawnEnemy(float DT) {
 	glm::uvec2 enemyTypes[] = { {0,0}, {0,1}, {2,0}, {3, 1} };
-	gameObject e;
-	e.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png",
-		gameObject::atlas, { 5,2 }, enemyTypes[rand() % 4], 128);
-	e.pos = player.pos;
-	e.setSize(playData.shipSize.x, playData.shipSize.y);
-	e.speed = 400 + rand() % 1000;
-	e.turningSpeed = 2.f + (rand() & 1000) / 500.0f;
+	gameObject e(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png",
+		            gameObject::atlas, { 5,2 }, enemyTypes[rand() % 4], 128);
+	e.setPos(player.getPos().x, player.getPos().y);
+	e.setDim(playData.shipSize.x, playData.shipSize.y);
+    float newVel = 400 + rand() % 1000;
+    e.setVel(newVel, newVel);
+	e.setTurningSpeed(2.f + (rand() & 1000) / 500.0f);
 	playData.enemies.push_back(e);
 }
 
 
-bool initGame() {
-	//initializing stuff for the renderer
-	gl2d::init();
-	renderer.create();
-	std::srand(std::time(0));
-  
-
-	//player creation
-	player.createObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png",
-                     gameObject::atlas, { 5,2 }, { 1,0 }, 128);
-	player.setSize(playData.shipSize.x, playData.shipSize.y);
-	player.speed = playData.speed;
-
-
-	//background texture init
-	backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
-	backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true);
-	backGroundTexture[2].loadFromFile(RESOURCES_PATH "background3.png", true);
-	backGroundTexture[3].loadFromFile(RESOURCES_PATH "background4.png", true);
-
-	tiledRenderer[0].texture = backGroundTexture[0];
-	tiledRenderer[1].texture = backGroundTexture[1];
-	tiledRenderer[2].texture = backGroundTexture[2];
-	tiledRenderer[3].texture = backGroundTexture[3];
-	tiledRenderer[0].paralaxStrength = 0;
-	tiledRenderer[1].paralaxStrength = 0.2;
-	tiledRenderer[2].paralaxStrength = 0.4;
-	tiledRenderer[3].paralaxStrength = 0.7;
-
-	return true;
-}
 
 
 
 bool gameLogic(float deltaTime) {
-	//init after the flush
-	int w = 0; int h = 0;
-	w = platform::getFrameBufferSizeX(); //window w
-	h = platform::getFrameBufferSizeY(); //window h
-	glViewport(0, 0, w, h);
-	glClear(GL_COLOR_BUFFER_BIT); //clear screen
-	renderer.updateWindowMetrics(w, h);
+    //Init after the flush
+    int w = 0; int h = 0;
+    w = platform::getFrameBufferSizeX(); //Window w
+    h = platform::getFrameBufferSizeY(); //Window h
+    glViewport(0, 0, w, h);
+    glClear(GL_COLOR_BUFFER_BIT); //Clear screen
+    renderer.updateWindowMetrics(w, h);
+    
 
 
+    //Mouse direction checking
+    glm::vec2 mousePos = platform::getRelMousePosition();
+    glm::vec2 screenCenter(player.getPos() - renderer.currentCamera.position);   
+    glm::vec2 mouseDirection = mousePos - screenCenter;
+    if (glm::length(mouseDirection) == 0.f) {
+        mouseDirection = { 1,0 };
+    } else {
+        mouseDirection = normalize(mouseDirection);
+    }
+    player.setRotation(atan2(mouseDirection.y, -mouseDirection.x));
+    platform::showMouse(playData.mouseShowing);
 
-	//mouse direction checking
-	glm::vec2 mousePos = platform::getRelMousePosition();
-	glm::vec2 screenCenter(player.pos - renderer.currentCamera.position);
-	glm::vec2 mouseDirection = mousePos - screenCenter;
-	if (glm::length(mouseDirection) == 0.f) {
-		mouseDirection = { 1,0 };
-	} else {
-		mouseDirection = normalize(mouseDirection);
-	}
-	player.rotation = atan2(mouseDirection.y, -mouseDirection.x);
-	platform::showMouse(playData.mouseShowing);
 
-
-	//camera setup
+	//Camera setup
 	renderer.currentCamera.zoom = playData.cameraSize;
-	renderer.currentCamera.follow(player.pos, deltaTime * 450, 10, 50, w, h);
+	renderer.currentCamera.follow(player.getPos(), deltaTime * 450, 10, 50, w, h);
 
 	
-	//update entities and key checks
+	//Update entities and key checks
 	playerMove(deltaTime);
 	cameraSizeChange(deltaTime);
 	bulletShooting(deltaTime, mouseDirection);
-	for (auto& e : playData.enemies) { enemyMovement(deltaTime, e); }
+	for (auto& e : playData.enemies) { enemyacc(deltaTime, e); }
 
 
-	//rendering everything
-	for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
+	//Rendering everything
+    for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
 	for (int i = 0; i < playData.bullets.size(); i++) {
-		if (glm::distance(playData.bullets[i].pos, player.pos) > 5000) { 
+		if (glm::distance(playData.bullets[i].getPos(), player.getPos()) > 5000) { 
 			playData.bullets.erase(playData.bullets.begin() + i); i--; continue; 
 		}
-		playData.bullets[i].update(deltaTime, renderer);
+   //     playData.bullets[i].update(deltaTime, renderer);
 	}
-	for (auto& e : playData.enemies) { e.update(deltaTime, renderer); }
-	player.update(deltaTime, renderer);
+	//for (auto& e : playData.enemies) { e.update(deltaTime, renderer); }
+	//player.update(deltaTime, renderer);
+    //gameObject::printObjectState(&player);
+    gameObject::updateAll(deltaTime, renderer);
 
 
-	//reset player movmemt
-	player.movement = { 0, 0 };
+	//Reset player acc
+	player.setAcc(0, 0);
 
-
-	//imGui debug ui
-	ImGui::Begin("debug");
-	ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
-	ImGui::Text("enemy count: %d \n", (int)playData.enemies.size());
-	ImGui::Text("object count: %d \n", (int)gameObject::getObjectCount());
-	ImGui::Text("fps: %d \n", (int)(std::round(1 / deltaTime)));
-	if (ImGui::Button("spawn enemy")) { spawnEnemy(deltaTime); }
-	ImGui::End();
-	
+    {//ImGui debug Ui
+        ImGui::Begin("debug");
+        ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
+        ImGui::Text("enemy count: %d \n", (int)playData.enemies.size());
+        ImGui::Text("object count: %d \n", (int)gameObject::getObjectCount());
+        ImGui::Text("fps: %d \n", (int)(std::round(1 / deltaTime)));
+        if (ImGui::Button("spawn enemy")) { spawnEnemy(deltaTime); }
+        ImGui::End();
+    }
 
 	renderer.flush();
 	return true;
 }
 
-//This function might not be be called if the program is forced closed
+//This function might not be called if the program is forced closed
 void closeGame() {
 
 
