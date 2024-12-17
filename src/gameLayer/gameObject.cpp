@@ -86,13 +86,14 @@ void gameObject::move(float deltaTime) {
 
 void gameObject::gravity() {
 	//TODO add collision detection and gravity system
-    acc = { acc.x, (acc.y + baseGravity) };
+    this->setAcc(acc.x, (acc.y + baseGravity));
     //Call collision detection here too?
 }
 
 void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
     for (auto go : gameObjects){
         update2(deltaTime, renderer, &go);
+        printObjectState(&go);
     }
 }
 void gameObject::update2(float deltaTime, gl2d::Renderer2D& renderer, gameObject* that){
@@ -134,7 +135,7 @@ void gameObject::printObjectState(gameObject* objectPtr){
 }
 void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 	if (enableGravity) { this->gravity(); }
-	if (acc != glm::vec2{0, 0}) { this->move(deltaTime); this->pos += acc; }
+	if (acc != glm::vec2{0, 0}) { this->move(deltaTime); this->setPos(this->getPos().x+this->getAcc().x, this->getPos().y+this->getAcc().y); }
 	if (currentTextureType == normal) {
 		renderer.renderRectangle({ (pos.x - pivot.x), (pos.y - pivot.y), dim }, objectTexture,
 			Colors_White, {}, glm::degrees(this->rotation) + 90.f);
@@ -144,10 +145,13 @@ void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 	}
 }
 
-int gameObject::getId() {
-	return this->id;
-}
 
+
+
+
+
+
+//Setters
 void gameObject::setDim(float newDimX, float newDimY) {
 	this->dim = { newDimX, newDimY };
 	this->pivot = { this->dim.x / 2, this->dim.y / 2 };
@@ -198,7 +202,7 @@ void gameObject::setTurningSpeed(float newTurningSpeed){
 
 
 
-
+//Getters
 glm::vec2 gameObject::getDim() {
     return gameObjects[(this->id - 1)].dim;
 }
@@ -232,6 +236,10 @@ float gameObject::getRotation(){
 float gameObject::getTurningSpeed(){
     return gameObjects[(this->id - 1)].turningSpeed;
 }
+int gameObject::getId() {
+	return this->id;
+}
+
 
 
 
