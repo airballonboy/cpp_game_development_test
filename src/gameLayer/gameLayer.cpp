@@ -53,10 +53,10 @@ bool initGame() {
 
 
     {//Background texture init
-        backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
-        backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true);
-        backGroundTexture[2].loadFromFile(RESOURCES_PATH "background3.png", true);
-        backGroundTexture[3].loadFromFile(RESOURCES_PATH "background4.png", true);
+        backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true, true);
+        backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true, true);
+        backGroundTexture[2].loadFromFile(RESOURCES_PATH "background3.png", true, true);
+        backGroundTexture[3].loadFromFile(RESOURCES_PATH "background4.png", true, true);
 
         tiledRenderer[0].texture = backGroundTexture[0];
         tiledRenderer[1].texture = backGroundTexture[1];

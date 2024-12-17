@@ -40,7 +40,7 @@ public:
     gameObject();
     virtual ~gameObject();
 	void update(float, gl2d::Renderer2D&);
-	static void update2(float, gl2d::Renderer2D&, gameObject);
+	static void update2(float, gl2d::Renderer2D&, gameObject*);
 	static void updateAll(float, gl2d::Renderer2D&);
 	void gravity();
     bool checkColission(gameObject);
@@ -89,6 +89,6 @@ public:
 	std::vector<gl2d::Texture> loadedTextures;
 	std::vector<gl2d::TextureAtlasPadding> loadedTextureAtlases;
 
-	int checkTextures(const char*, bool, int = 128, glm::vec2 = { 0, 0 });
+	int checkTextures(const char*, bool, bool = false, bool = true, bool = true, int = 128, glm::vec2 = { 0, 0 });
 
 };

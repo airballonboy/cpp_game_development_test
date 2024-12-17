@@ -15,18 +15,20 @@ std::vector<gameObject> gameObject::gameObjects;
 
 
 //Checks if the current texture is loaded or not and loads it if not
-int loadOnceClass::checkTextures(const char* Texture, bool atlas, int atlasdim, glm::vec2 atlasPoint) {
-	for (const char* T : loadedTexturesNames) {
+int loadOnceClass::checkTextures(const char* Texture, bool atlas, bool minPixelated, bool magPixelated, bool MipMap, 
+                                 int atlasdim, glm::vec2 atlasPoint) {
+	
+    for (const char* T : loadedTexturesNames) {
 		if (Texture == T) { return std::distance(loadedTexturesNames.begin() 
 			,std::find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture)); }
 	}
 	loadOnceClass::loadedTexturesNames.push_back(Texture);
 	gl2d::Texture t;
 	if (!atlas) {
-		t.loadFromFile(Texture, true);
+		t.loadFromFile(Texture, minPixelated, magPixelated, MipMap);
 	} else {
 		gl2d::TextureAtlasPadding tPadding;
-		t.loadFromFileWithPixelPadding(Texture, atlasdim, true);
+		t.loadFromFileWithPixelPadding(Texture, atlasdim, minPixelated, magPixelated, MipMap);
 		tPadding = gl2d::TextureAtlasPadding(atlasPoint.x, atlasPoint.y, t.GetSize().x, t.GetSize().y);
 		loadOnceClass::loadedTextureAtlases.push_back(tPadding);
 	}
@@ -51,10 +53,10 @@ gameObject::gameObject(objectType _type, const char* _textureFile, textureType _
 	currentTextureType = _currentTextureType;
 	currentType = _type;
 	if (currentTextureType == normal) {
-		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, false)];
+		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, false, false ,true, true)];
 	} else if (currentTextureType == atlas) {
-		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, true, _atlasdim, _atlasPoint)];
-		objectAtlas = loadOnce.loadedTextureAtlases[loadOnce.checkTextures(_textureFile, true, _atlasdim, _atlasPoint)];
+		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, true, false, true, true, _atlasdim, _atlasPoint)];
+		objectAtlas = loadOnce.loadedTextureAtlases[loadOnce.checkTextures(_textureFile, true, false, true, true, _atlasdim, _atlasPoint)];
 	}
     gameObjects.emplace_back(*this); 
 }
@@ -90,18 +92,18 @@ void gameObject::gravity() {
 
 void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
     for (auto go : gameObjects){
-        update2(deltaTime, renderer, go);
+        update2(deltaTime, renderer, &go);
     }
 }
-void gameObject::update2(float deltaTime, gl2d::Renderer2D& renderer, gameObject that){
-	if (that.enableGravity) { that.gravity(); }
-	if (that.acc != glm::vec2{0, 0}) { that.move(deltaTime); that.setPos(that.pos.x + that.acc.x, that.pos.y + that.acc.y); }
-	if (that.currentTextureType == gameObject::normal) {
-		renderer.renderRectangle({ (that.pos.x - that.pivot.x), (that.pos.y - that.pivot.y), that.dim }, that.objectTexture,
-			Colors_White, {}, glm::degrees(that.rotation) + 90.f);
-	} else if (that.currentTextureType == gameObject::atlas) {
-		renderer.renderRectangle({ (that.pos.x - that.pivot.x), (that.pos.y - that.pivot.y), that.dim }, that.objectTexture, Colors_White, {},
-            glm::degrees(that.rotation) + 90.f, that.objectAtlas.get(that.currentTextureCoords.x, that.currentTextureCoords.y));
+void gameObject::update2(float deltaTime, gl2d::Renderer2D& renderer, gameObject* that){
+	if (that->enableGravity) { that->gravity(); }
+	if (that->acc != glm::vec2{0, 0}) { that->move(deltaTime); that->setPos(that->pos.x + that->acc.x, that->pos.y + that->acc.y); }
+	if (that->currentTextureType == gameObject::normal) {
+		renderer.renderRectangle({ (that->pos.x - that->pivot.x), (that->pos.y - that->pivot.y), that->dim }, that->objectTexture,
+			Colors_White, {}, glm::degrees(that->rotation) + 90.f);
+	} else if (that->currentTextureType == gameObject::atlas) {
+		renderer.renderRectangle({ (that->pos.x - that->pivot.x), (that->pos.y - that->pivot.y), that->dim }, that->objectTexture, Colors_White,
+            {},glm::degrees(that->rotation) + 90.f, that->objectAtlas.get(that->currentTextureCoords.x, that->currentTextureCoords.y));
 	}
 }
 void gameObject::printObjectState(gameObject* objectPtr){
