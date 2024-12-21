@@ -87,6 +87,7 @@ void bulletShooting(float DT, glm::vec2 mouseDirection) {
 		b.setVel(1500, 1500);
 		b.setAcc(mouseDirection.x, mouseDirection.y);
 		b.setDim(50, 50);
+        gameObject::addToLayer(&b, "bullets");
 
 		playData.bullets.push_back(b);
 	}
@@ -123,11 +124,14 @@ bool initGame() {
 	gl2d::init();
 	renderer.create();
 	std::srand(std::time(0));
+    gameObject::newLayer("default", 10);
+    gameObject::newLayer("player", 15);
+    gameObject::newLayer("bullets", 8);
+
     //Player creation
     player = gameObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, { 1,0 }, 128);
 	player.setDim(playData.shipSize.x, playData.shipSize.y);
 	player.setVel(playData.vel.x, playData.vel.y);
-
 
     {//Background texture init
         backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true, true);

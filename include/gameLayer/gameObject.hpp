@@ -16,6 +16,15 @@ private:
 
 	gl2d::Texture objectTexture;
 	gl2d::TextureAtlasPadding objectAtlas;
+    bool rendered;
+    
+    struct renderLayer{
+        std::string name;
+        int order;
+    };
+    static std::vector<renderLayer> layer; 
+    std::string currentLayer = "default";
+
 
     float baseGravity = 9.8;
 	float rotation = 0;
@@ -30,25 +39,26 @@ private:
     bool enableCollision = false;
 
 public:
+    //Variables
     static std::vector<gameObject> gameObjects; // Declaration
 	enum objectType { bullet, background, entity, staticEntity };
 	enum textureType { normal, atlas };
 	textureType currentTextureType;
 	objectType currentType;
 	glm::vec2 currentTextureCoords;
+
+    //functions
 	gameObject(objectType, const char*, textureType = normal, glm::vec2 = { 1, 1 }, glm::vec2 = { 0, 0 }, int = 128);
     gameObject();
-    virtual ~gameObject();
 	void update(float, gl2d::Renderer2D&);
-	static void update2(float, gl2d::Renderer2D&, gameObject*);
+	static void updateByRef(float, gl2d::Renderer2D&, gameObject*);
 	static void updateAll(float, gl2d::Renderer2D&);
-	void gravity();
-    bool checkColission(gameObject);
     static void printObjectState(gameObject*);
 	static int getObjectCount();
-	int getId();
-	bool isTheSameObject(gameObject);
+	void gravity();
 	void move(float);
+    bool checkColission(gameObject);
+	bool isTheSameObject(gameObject);
 
 
 
@@ -67,6 +77,7 @@ public:
 
 
     //Getters
+	int getId();
     glm::vec2 getAcc();
     glm::vec2 getVel();
     glm::vec2 getPos();
@@ -79,6 +90,10 @@ public:
     float getRotation();
     float getTurningSpeed();
 
+
+
+    static void newLayer(std::string, int);
+    static void addToLayer(gameObject*, std::string);
    
 
 
