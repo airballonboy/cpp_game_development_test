@@ -1,5 +1,5 @@
 #include "gameObject.hpp"
-#include <cstring>
+#include <string>
 #include <gl2d/gl2d.h>
 #include <algorithm>
 #include <ostream>
@@ -12,33 +12,51 @@ int objectCount = 0;
 loadOnceClass loadOnce;
 // Definition of static member
 std::vector<gameObject> gameObject::gameObjects;
+std::vector<gameObject::renderLayer> gameObject::layer;
 
 
 //Checks if the current texture is loaded or not and loads it if not
-int loadOnceClass::checkTextures(const char* Texture, bool atlas, int atlasdim, glm::vec2 atlasPoint) {
-	for (const char* T : loadedTexturesNames) {
+int loadOnceClass::checkTextures(const char* Texture, bool atlas, bool minPixelated, bool magPixelated, bool MipMap, 
+                                 int atlasdim, glm::vec2 atlasPoint) {
+	
+    for (const char* T : loadedTexturesNames) {
 		if (Texture == T) { return std::distance(loadedTexturesNames.begin() 
 			,std::find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture)); }
 	}
 	loadOnceClass::loadedTexturesNames.push_back(Texture);
 	gl2d::Texture t;
 	if (!atlas) {
-		t.loadFromFile(Texture, true);
+		t.loadFromFile(Texture, minPixelated, magPixelated, MipMap);
 	} else {
 		gl2d::TextureAtlasPadding tPadding;
-		t.loadFromFileWithPixelPadding(Texture, atlasdim, true);
+		t.loadFromFileWithPixelPadding(Texture, atlasdim, minPixelated, magPixelated, MipMap);
 		tPadding = gl2d::TextureAtlasPadding(atlasPoint.x, atlasPoint.y, t.GetSize().x, t.GetSize().y);
 		loadOnceClass::loadedTextureAtlases.push_back(tPadding);
 	}
 	loadOnceClass::loadedTextures.push_back(t);
 	return std::distance(loadedTexturesNames.begin(), std::find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture));
 }
+void gameObject::newLayer(std::string name, int order){
+    renderLayer L;
+    L.name = name;
+    L.order = order;
+    layer.push_back(L);
+    std::sort(layer.begin(), layer.end(), [](const renderLayer& a, const renderLayer& b){
+        return a.order < b.order;
+    });
+}
+void gameObject::addToLayer(gameObject* GO, std::string name){
+    auto check = [](bool C, std::string thisName, std::vector<renderLayer>* L)
+        {for (renderLayer RL : *L) {if (RL.name == thisName){C = true;break;} C = false;}return C;};
+    
+    if (!check (true, name, &layer)){
+        std::cerr << "name doesn't match any layer";
+    }
+    GO->currentLayer = name;
+    gameObjects[GO->id - 1].currentLayer = name;
+}
 int gameObject::getObjectCount() {
 	return objectCount;
-}
-
-gameObject::~gameObject(){
-
 }
 
 //Creating the object and loading it's texture if it isn't loaded
@@ -51,12 +69,13 @@ gameObject::gameObject(objectType _type, const char* _textureFile, textureType _
 	currentTextureType = _currentTextureType;
 	currentType = _type;
 	if (currentTextureType == normal) {
-		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, false)];
+		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, false, false ,true, true)];
 	} else if (currentTextureType == atlas) {
-		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, true, _atlasdim, _atlasPoint)];
-		objectAtlas = loadOnce.loadedTextureAtlases[loadOnce.checkTextures(_textureFile, true, _atlasdim, _atlasPoint)];
+		objectTexture = loadOnce.loadedTextures[loadOnce.checkTextures(_textureFile, true, false, true, true, _atlasdim, _atlasPoint)];
+		objectAtlas = loadOnce.loadedTextureAtlases[loadOnce.checkTextures(_textureFile, true, false, true, true, _atlasdim, _atlasPoint)];
 	}
-    gameObjects.emplace_back(*this); 
+    gameObjects.emplace_back(*this);
+    addToLayer(&gameObjects[this->id - 1], currentLayer);
 }
 gameObject::gameObject(){
     
@@ -84,55 +103,63 @@ void gameObject::move(float deltaTime) {
 
 void gameObject::gravity() {
 	//TODO add collision detection and gravity system
-    acc = { acc.x, (acc.y + baseGravity) };
+    this->setAcc(acc.x, (acc.y + baseGravity));
     //Call collision detection here too?
 }
 
 void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
-    for (auto go : gameObjects){
-        update2(deltaTime, renderer, go);
+    //NOTE still doesn't work but better
+    for(int i = 0; i < layer.size(); i++) {
+        for (auto& go : gameObjects){
+            if ((go.currentLayer == layer[i].name) && !go.rendered) {
+                updateByRef(deltaTime, renderer, &gameObjects[go.id - 1]);
+                gameObjects[go.id - 1].rendered = true;
+            }
+        }
     }
+    for(auto& go : gameObjects){ gameObjects[go.id - 1].rendered = false; }
 }
-void gameObject::update2(float deltaTime, gl2d::Renderer2D& renderer, gameObject that){
-	if (that.enableGravity) { that.gravity(); }
-	if (that.acc != glm::vec2{0, 0}) { that.move(deltaTime); that.setPos(that.pos.x + that.acc.x, that.pos.y + that.acc.y); }
-	if (that.currentTextureType == gameObject::normal) {
-		renderer.renderRectangle({ (that.pos.x - that.pivot.x), (that.pos.y - that.pivot.y), that.dim }, that.objectTexture,
-			Colors_White, {}, glm::degrees(that.rotation) + 90.f);
-	} else if (that.currentTextureType == gameObject::atlas) {
-		renderer.renderRectangle({ (that.pos.x - that.pivot.x), (that.pos.y - that.pivot.y), that.dim }, that.objectTexture, Colors_White, {},
-            glm::degrees(that.rotation) + 90.f, that.objectAtlas.get(that.currentTextureCoords.x, that.currentTextureCoords.y));
+void gameObject::updateByRef(float deltaTime, gl2d::Renderer2D& renderer, gameObject* that){
+	if (that->enableGravity) { that->gravity(); }
+	if (that->acc != glm::vec2{0, 0}) { that->move(deltaTime); that->setPos(that->pos.x + that->acc.x, that->pos.y + that->acc.y); }
+	if (that->currentTextureType == gameObject::normal) {
+		renderer.renderRectangle({ (that->pos.x - that->pivot.x), (that->pos.y - that->pivot.y), that->dim }, that->objectTexture,
+			Colors_White, {}, glm::degrees(that->rotation) + 90.f);
+	} else if (that->currentTextureType == gameObject::atlas) {
+		renderer.renderRectangle({ (that->pos.x - that->pivot.x), (that->pos.y - that->pivot.y), that->dim }, that->objectTexture, Colors_White,
+            {},glm::degrees(that->rotation) + 90.f, that->objectAtlas.get(that->currentTextureCoords.x, that->currentTextureCoords.y));
 	}
 }
 void gameObject::printObjectState(gameObject* objectPtr){
-    gameObject object = *objectPtr;
-    std::cout << "id: " << object.id<< std::endl;
-    std::cout << "currentTextureType: " << object.currentTextureType<< std::endl;
-    std::cout << "currentType: " << object.currentType<< std::endl;
-    std::cout << "baseGravity: " << object.baseGravity<< std::endl;
-    std::cout << "rotation: " << object.rotation<< std::endl;
-    std::cout << "turningSpeed: " << object.turningSpeed<< std::endl;
-    std::cout << "acc.x: " << object.acc.x<< std::endl;
-    std::cout << "acc.y: " << object.acc.y<< std::endl;
-    std::cout << "vel.x: " << object.vel.x<< std::endl;
-    std::cout << "vel.y: " << object.vel.y<< std::endl;
-    std::cout << "pos.x: " << object.pos.x<< std::endl;
-    std::cout << "pos.y: " << object.pos.y<< std::endl;
-    std::cout << "dim.x: " << object.dim.x<< std::endl;
-    std::cout << "dim.y: " << object.dim.y<< std::endl;
-    std::cout << "pivot.x: " << object.pivot.x<< std::endl;
-    std::cout << "pivot.y: " << object.pivot.y<< std::endl;
-    std::cout << "currentTextureCoords.x: " << object.currentTextureCoords.x<< std::endl;
-    std::cout << "currentTextureCoords.y: " << object.currentTextureCoords.y<< std::endl;
-    std::cout << "enableGravity: " << object.enableGravity<< std::endl;
-    std::cout << "enableCollision: " << object.enableCollision<< std::endl;
+    gameObject o = *objectPtr;
+    std::cout << "id: " << o.id<< std::endl;
+    std::cout << "currentTextureType: " << o.currentTextureType<< std::endl;
+    std::cout << "currentType: " << o.currentType<< std::endl;
+    std::cout << "currentSortingLayer: " << o.currentLayer<< std::endl;
+    std::cout << "baseGravity: " << o.baseGravity<< std::endl;
+    std::cout << "rotation: " << o.rotation<< std::endl;
+    std::cout << "turningSpeed: " << o.turningSpeed<< std::endl;
+    std::cout << "acc.x: " << o.acc.x<< std::endl;
+    std::cout << "acc.y: " << o.acc.y<< std::endl;
+    std::cout << "vel.x: " << o.vel.x<< std::endl;
+    std::cout << "vel.y: " << o.vel.y<< std::endl;
+    std::cout << "pos.x: " << o.pos.x<< std::endl;
+    std::cout << "pos.y: " << o.pos.y<< std::endl;
+    std::cout << "dim.x: " << o.dim.x<< std::endl;
+    std::cout << "dim.y: " << o.dim.y<< std::endl;
+    std::cout << "pivot.x: " << o.pivot.x<< std::endl;
+    std::cout << "pivot.y: " << o.pivot.y<< std::endl;
+    std::cout << "currentTextureCoords.x: " << o.currentTextureCoords.x<< std::endl;
+    std::cout << "currentTextureCoords.y: " << o.currentTextureCoords.y<< std::endl;
+    std::cout << "enableGravity: " << o.enableGravity<< std::endl;
+    std::cout << "enableCollision: " << o.enableCollision<< std::endl;
 
 
     std::cout << "---------------------------------------------------" << std::endl;
 }
 void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 	if (enableGravity) { this->gravity(); }
-	if (acc != glm::vec2{0, 0}) { this->move(deltaTime); this->pos += acc; }
+	if (acc != glm::vec2{0, 0}) { this->move(deltaTime); this->setPos(this->getPos().x+this->getAcc().x, this->getPos().y+this->getAcc().y); }
 	if (currentTextureType == normal) {
 		renderer.renderRectangle({ (pos.x - pivot.x), (pos.y - pivot.y), dim }, objectTexture,
 			Colors_White, {}, glm::degrees(this->rotation) + 90.f);
@@ -142,10 +169,13 @@ void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 	}
 }
 
-int gameObject::getId() {
-	return this->id;
-}
 
+
+
+
+
+
+//Setters
 void gameObject::setDim(float newDimX, float newDimY) {
 	this->dim = { newDimX, newDimY };
 	this->pivot = { this->dim.x / 2, this->dim.y / 2 };
@@ -196,7 +226,7 @@ void gameObject::setTurningSpeed(float newTurningSpeed){
 
 
 
-
+//Getters
 glm::vec2 gameObject::getDim() {
     return gameObjects[(this->id - 1)].dim;
 }
@@ -230,6 +260,10 @@ float gameObject::getRotation(){
 float gameObject::getTurningSpeed(){
     return gameObjects[(this->id - 1)].turningSpeed;
 }
+int gameObject::getId() {
+	return this->id;
+}
+
 
 
 

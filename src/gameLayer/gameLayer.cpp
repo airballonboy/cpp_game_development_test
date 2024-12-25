@@ -39,37 +39,7 @@ gameObject player;
 
 
 
-bool initGame() {
-	//Initializing stuff for the renderer
-	gl2d::init();
-	renderer.create();
-	std::srand(std::time(0));
-    //Player creation
-    player = gameObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, { 1,0 }, 128);
 
-
-	player.setDim(playData.shipSize.x, playData.shipSize.y);
-	player.setVel(playData.vel.x, playData.vel.y);
-
-
-    {//Background texture init
-        backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true);
-        backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true);
-        backGroundTexture[2].loadFromFile(RESOURCES_PATH "background3.png", true);
-        backGroundTexture[3].loadFromFile(RESOURCES_PATH "background4.png", true);
-
-        tiledRenderer[0].texture = backGroundTexture[0];
-        tiledRenderer[1].texture = backGroundTexture[1];
-        tiledRenderer[2].texture = backGroundTexture[2];
-        tiledRenderer[3].texture = backGroundTexture[3];
-        tiledRenderer[0].paralaxStrength = 0.f;
-        tiledRenderer[1].paralaxStrength = 0.2f;
-        tiledRenderer[2].paralaxStrength = 0.4f;
-        tiledRenderer[3].paralaxStrength = 0.7f;
-    }
-
-	return true;
-}
 
 
 
@@ -117,6 +87,7 @@ void bulletShooting(float DT, glm::vec2 mouseDirection) {
 		b.setVel(1500, 1500);
 		b.setAcc(mouseDirection.x, mouseDirection.y);
 		b.setDim(50, 50);
+        gameObject::addToLayer(&b, "bullets");
 
 		playData.bullets.push_back(b);
 	}
@@ -144,10 +115,45 @@ void spawnEnemy(float DT) {
     float newVel = 400 + rand() % 1000;
     e.setVel(newVel, newVel);
 	e.setTurningSpeed(2.f + (rand() & 1000) / 500.0f);
+    gameObject::addToLayer(&e, "enemy");
 	playData.enemies.push_back(e);
 }
 
 
+bool initGame() {
+	//Initializing stuff for the renderer
+	gl2d::init();
+	renderer.create();
+	std::srand(std::time(0));
+    gameObject::newLayer("default", 10);
+    gameObject::newLayer("enemy", 11);
+    gameObject::newLayer("player", 15);
+    gameObject::newLayer("bullets", 8);
+
+    //Player creation
+    player = gameObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, { 1,0 }, 128);
+	player.setDim(playData.shipSize.x, playData.shipSize.y);
+    gameObject::addToLayer(&player, "player");
+	player.setVel(playData.vel.x, playData.vel.y);
+
+    {//Background texture init
+        backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true, true);
+        backGroundTexture[1].loadFromFile(RESOURCES_PATH "background2.png", true, true);
+        backGroundTexture[2].loadFromFile(RESOURCES_PATH "background3.png", true, true);
+        backGroundTexture[3].loadFromFile(RESOURCES_PATH "background4.png", true, true);
+
+        tiledRenderer[0].texture = backGroundTexture[0];
+        tiledRenderer[1].texture = backGroundTexture[1];
+        tiledRenderer[2].texture = backGroundTexture[2];
+        tiledRenderer[3].texture = backGroundTexture[3];
+        tiledRenderer[0].paralaxStrength = 0.f;
+        tiledRenderer[1].paralaxStrength = 0.2f;
+        tiledRenderer[2].paralaxStrength = 0.4f;
+        tiledRenderer[3].paralaxStrength = 0.7f;
+    }
+
+	return true;
+}
 
 
 
@@ -193,11 +199,7 @@ bool gameLogic(float deltaTime) {
 		if (glm::distance(playData.bullets[i].getPos(), player.getPos()) > 5000) { 
 			playData.bullets.erase(playData.bullets.begin() + i); i--; continue; 
 		}
-   //     playData.bullets[i].update(deltaTime, renderer);
 	}
-	//for (auto& e : playData.enemies) { e.update(deltaTime, renderer); }
-	//player.update(deltaTime, renderer);
-    //gameObject::printObjectState(&player);
     gameObject::updateAll(deltaTime, renderer);
 
 
