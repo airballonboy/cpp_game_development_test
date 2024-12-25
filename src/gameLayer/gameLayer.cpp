@@ -115,6 +115,7 @@ void spawnEnemy(float DT) {
     float newVel = 400 + rand() % 1000;
     e.setVel(newVel, newVel);
 	e.setTurningSpeed(2.f + (rand() & 1000) / 500.0f);
+    e.addToLayer(&e, "enemy");
 	playData.enemies.push_back(e);
 }
 
@@ -125,12 +126,14 @@ bool initGame() {
 	renderer.create();
 	std::srand(std::time(0));
     gameObject::newLayer("default", 10);
+    gameObject::newLayer("enemy", 11);
     gameObject::newLayer("player", 15);
     gameObject::newLayer("bullets", 8);
 
     //Player creation
     player = gameObject(gameObject::entity, RESOURCES_PATH "spaceShip/stitchedFiles/spaceships.png", gameObject::atlas, { 5,2 }, { 1,0 }, 128);
 	player.setDim(playData.shipSize.x, playData.shipSize.y);
+    gameObject::addToLayer(&player, "player");
 	player.setVel(playData.vel.x, playData.vel.y);
 
     {//Background texture init

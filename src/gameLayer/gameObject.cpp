@@ -1,6 +1,5 @@
 #include "gameObject.hpp"
-#include <cassert>
-#include <cstring>
+#include <string>
 #include <gl2d/gl2d.h>
 #include <algorithm>
 #include <ostream>
@@ -110,16 +109,15 @@ void gameObject::gravity() {
 
 void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
     //NOTE still doesn't work but better
-    for (auto& go : gameObjects){
-        for(int i = 0; i < layer.size(); i++) {
-            if ((go.currentLayer == layer[i].name) && (!go.rendered)) {
+    for(int i = 0; i < layer.size(); i++) {
+        for (auto& go : gameObjects){
+            if ((go.currentLayer == layer[i].name) && !go.rendered) {
                 updateByRef(deltaTime, renderer, &gameObjects[go.id - 1]);
-                go.rendered = true;
-                break;
+                gameObjects[go.id - 1].rendered = true;
             }
         }
-        go.rendered = false;
     }
+    for(auto& go : gameObjects){ gameObjects[go.id - 1].rendered = false; }
 }
 void gameObject::updateByRef(float deltaTime, gl2d::Renderer2D& renderer, gameObject* that){
 	if (that->enableGravity) { that->gravity(); }
