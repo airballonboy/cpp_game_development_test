@@ -115,7 +115,7 @@ void spawnEnemy(float DT) {
     float newVel = 400 + rand() % 1000;
     e.setVel(newVel, newVel);
 	e.setTurningSpeed(2.f + (rand() & 1000) / 500.0f);
-    e.addToLayer(&e, "enemy");
+    gameObject::addToLayer(&e, "enemy");
 	playData.enemies.push_back(e);
 }
 
