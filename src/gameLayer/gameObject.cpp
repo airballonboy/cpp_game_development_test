@@ -37,9 +37,10 @@ int loadOnceClass::checkTextures(const char* Texture, bool atlas, bool minPixela
 	return std::distance(loadedTexturesNames.begin(), std::find(loadedTexturesNames.begin(), loadedTexturesNames.end(), Texture));
 }
 void gameObject::newLayer(std::string name, int order){
-    renderLayer L;
-    L.name = name;
-    L.order = order;
+    renderLayer L = {
+        .name = name,
+        .order = order
+    };
     layer.push_back(L);
     std::sort(layer.begin(), layer.end(), [](const renderLayer& a, const renderLayer& b){
         return a.order < b.order;
@@ -48,12 +49,24 @@ void gameObject::newLayer(std::string name, int order){
 void gameObject::addToLayer(gameObject* GO, std::string name){
     auto check = [](bool C, std::string thisName, std::vector<renderLayer>* L)
         {for (renderLayer RL : *L) {if (RL.name == thisName){C = true;break;} C = false;}return C;};
+    auto find = [](std::string thisName, std::vector<renderLayer>* L){ 
+        for(renderLayer RL : *L){
+            if (RL.name == thisName){return RL.order;}
+        }
+        return 0;
+    };
     
     if (!check (true, name, &layer)){
         std::cerr << "name doesn't match any layer";
     }
-    GO->currentLayer = name;
-    gameObjects[GO->id - 1].currentLayer = name;
+    GO->currentLayer = {
+        .name = name,
+        .order = find(name, &layer)
+    };
+    gameObjects[GO->id - 1].currentLayer = {
+        .name = name,
+        .order = GO->currentLayer.order
+    };
 }
 int gameObject::getObjectCount() {
 	return objectCount;
@@ -75,11 +88,9 @@ gameObject::gameObject(objectType _type, const char* _textureFile, textureType _
 		objectAtlas = loadOnce.loadedTextureAtlases[loadOnce.checkTextures(_textureFile, true, false, true, true, _atlasdim, _atlasPoint)];
 	}
     gameObjects.emplace_back(*this);
-    addToLayer(&gameObjects[this->id - 1], currentLayer);
+    addToLayer(&gameObjects[this->id - 1], currentLayer.name);
 }
-gameObject::gameObject(){
-    
-}
+gameObject::gameObject(){}
 
 //Checks if two objects are the same
 bool gameObject::isTheSameObject(gameObject otherObject) {
@@ -88,13 +99,51 @@ bool gameObject::isTheSameObject(gameObject otherObject) {
 	} else { return false; }
 }
 
-bool gameObject::checkColission(gameObject currentObject){
+void gameObject::colliderStruct::checkColission(){
     //TODO make collision checks
-    if (enableCollision) {
-        //Code here
-        
+    //under construction 
+    //Code here
+    auto collCheck = [](gameObject* a, gameObject* b) -> bool {
+        return ((a != b)                                        &&
+                (a->getPos().x < b->getPos().x + b->getDim().x) && 
+                (a->getPos().x + a->getDim().x > b->getPos().x) && 
+                (a->getPos().y < b->getPos().y + b->getDim().y) && 
+                (a->getPos().y + a->getDim().y > b->getPos().y));
+    };
+
+    std::cout << "function called" << std::endl; 
+    for (auto& objA : gameObjects) {
+        if (!objA.collider2d.enableCollision) {
+            std::cout << "not collideable" << std::endl; 
+            continue;
+        }
+
+        if (objA.collider2d.collided) {
+            if (objA.collider2d.collidedWith == nullptr ||
+                !collCheck(&objA, objA.collider2d.collidedWith)) {
+                objA.collider2d.collided = false;
+                objA.collider2d.collidedWith = nullptr;
+            }
+        } else {
+            for (auto& objB : gameObjects) {
+                if (objA.id == objB.id) {
+                    continue;
+                }
+
+                if (objB.collider2d.enableCollision && collCheck(&objA, &objB)) {
+                    objA.collider2d = {
+                        .collided = true,
+                        .collidedWith = &objB
+                    };
+                    objB.collider2d = { 
+                            .collided = true,
+                            .collidedWith = &objA
+                    };
+                    break; // Exit inner loop on first collision
+                }
+            }
+        }
     }
-    return false;
 }
 void gameObject::move(float deltaTime) {
     glm::vec2 normalizedAcc = glm::normalize(acc);
@@ -108,16 +157,19 @@ void gameObject::gravity() {
 }
 
 void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
-    //NOTE still doesn't work but better
-    for(int i = 0; i < layer.size(); i++) {
+    //the outerLoop goes over every layer and for every layer the inner loop updates every object in the Layer 
+    //HELP gets segFault
+    colliderStruct::checkColission();
+    for (int i = 0; i < layer.size(); i++){
         for (auto& go : gameObjects){
-            if ((go.currentLayer == layer[i].name) && !go.rendered) {
+            if (!go.rendered && go.currentLayer.name == layer[i].name){
+                //std::cout << go.collider2d.collided << std::endl;
                 updateByRef(deltaTime, renderer, &gameObjects[go.id - 1]);
-                gameObjects[go.id - 1].rendered = true;
+                go.rendered = true;
             }
         }
     }
-    for(auto& go : gameObjects){ gameObjects[go.id - 1].rendered = false; }
+    for(auto& go : gameObjects){ go.rendered = false; }
 }
 void gameObject::updateByRef(float deltaTime, gl2d::Renderer2D& renderer, gameObject* that){
 	if (that->enableGravity) { that->gravity(); }
@@ -135,7 +187,8 @@ void gameObject::printObjectState(gameObject* objectPtr){
     std::cout << "id: " << o.id<< std::endl;
     std::cout << "currentTextureType: " << o.currentTextureType<< std::endl;
     std::cout << "currentType: " << o.currentType<< std::endl;
-    std::cout << "currentSortingLayer: " << o.currentLayer<< std::endl;
+    std::cout << "currentSortingLayer: " << o.currentLayer.name << std::endl;
+    std::cout << "currentSortingLayer: " << o.currentLayer.order << std::endl;
     std::cout << "baseGravity: " << o.baseGravity<< std::endl;
     std::cout << "rotation: " << o.rotation<< std::endl;
     std::cout << "turningSpeed: " << o.turningSpeed<< std::endl;
@@ -152,10 +205,10 @@ void gameObject::printObjectState(gameObject* objectPtr){
     std::cout << "currentTextureCoords.x: " << o.currentTextureCoords.x<< std::endl;
     std::cout << "currentTextureCoords.y: " << o.currentTextureCoords.y<< std::endl;
     std::cout << "enableGravity: " << o.enableGravity<< std::endl;
-    std::cout << "enableCollision: " << o.enableCollision<< std::endl;
+    std::cout << "enableCollision: " << o.collider2d.enableCollision<< std::endl;
 
 
-    std::cout << "---------------------------------------------------" << std::endl;
+    std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" << std::endl;
 }
 void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 	if (enableGravity) { this->gravity(); }
@@ -207,8 +260,8 @@ void gameObject::setGravityBool(bool newGravityBool){
     gameObjects[(this->id - 1)].enableGravity = this->enableGravity;
 }
 void gameObject::setCollisionBool(bool newCollisionBool){
-    this->enableCollision = newCollisionBool;
-    gameObjects[(this->id - 1)].enableCollision = this->enableCollision;
+    this->collider2d.enableCollision = newCollisionBool;
+    gameObjects[(this->id - 1)].collider2d.enableCollision = this->collider2d.enableCollision;
 }
 void gameObject::setBaseGravity(float newBaseGravity){
     this->baseGravity = newBaseGravity;
@@ -249,7 +302,7 @@ bool gameObject::getGravityBool(){
     return gameObjects[(this->id - 1)].enableGravity;
 }
 bool gameObject::getCollisionBool(){
-    return gameObjects[(this->id - 1)].enableCollision;
+    return gameObjects[(this->id - 1)].collider2d.enableCollision;
 }
 float gameObject::getBaseGravity(){
     return gameObjects[(this->id - 1)].baseGravity;

@@ -47,6 +47,7 @@ void printFpsCounter(float deltaTime) {
 	fpsCurrentTimer += deltaTime;
 	fps++;
 	if (fpsCurrentTimer >= 1) {
+        //gameObject::printObjectState(&player);
 		fpsCurrentTimer = 0;
 		std::cout << fps << " ";
 		fps = 0;
@@ -116,6 +117,7 @@ void spawnEnemy(float DT) {
     e.setVel(newVel, newVel);
 	e.setTurningSpeed(2.f + (rand() & 1000) / 500.0f);
     gameObject::addToLayer(&e, "enemy");
+    e.setCollisionBool(true);
 	playData.enemies.push_back(e);
 }
 
@@ -135,6 +137,7 @@ bool initGame() {
 	player.setDim(playData.shipSize.x, playData.shipSize.y);
     gameObject::addToLayer(&player, "player");
 	player.setVel(playData.vel.x, playData.vel.y);
+    player.setCollisionBool(true);
 
     {//Background texture init
         backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true, true);
@@ -211,7 +214,7 @@ bool gameLogic(float deltaTime) {
         ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
         ImGui::Text("enemy count: %d \n", (int)playData.enemies.size());
         ImGui::Text("object count: %d \n", (int)gameObject::getObjectCount());
-        ImGui::Text("fps: %d \n", (int)(std::round(1 / deltaTime)));
+        ImGui::Text("fps: %d \n", (int)(std::floor(1 / deltaTime)));
         if (ImGui::Button("spawn enemy")) { spawnEnemy(deltaTime); }
         ImGui::End();
     }
