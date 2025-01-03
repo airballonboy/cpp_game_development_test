@@ -117,6 +117,7 @@ void spawnEnemy(float DT) {
     e.setVel(newVel, newVel);
 	e.setTurningSpeed(2.f + (rand() & 1000) / 500.0f);
     gameObject::addToLayer(&e, "enemy");
+    e.setCollisionBool(true);
 	playData.enemies.push_back(e);
 }
 
@@ -136,6 +137,7 @@ bool initGame() {
 	player.setDim(playData.shipSize.x, playData.shipSize.y);
     gameObject::addToLayer(&player, "player");
 	player.setVel(playData.vel.x, playData.vel.y);
+    player.setCollisionBool(true);
 
     {//Background texture init
         backGroundTexture[0].loadFromFile(RESOURCES_PATH "background1.png", true, true);

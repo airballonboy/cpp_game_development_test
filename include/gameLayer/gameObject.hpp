@@ -62,7 +62,7 @@ public:
         bool collided = false;
         gameObject* collidedWith;
         bool enableCollision = false;
-        static bool checkColission();
+        static void checkColission();
     }collider2d;
 
 

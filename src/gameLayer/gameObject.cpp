@@ -99,7 +99,7 @@ bool gameObject::isTheSameObject(gameObject otherObject) {
 	} else { return false; }
 }
 
-bool gameObject::colliderStruct::checkColission(){
+void gameObject::colliderStruct::checkColission(){
     //TODO make collision checks
     //under construction 
     //Code here
@@ -111,43 +111,39 @@ bool gameObject::colliderStruct::checkColission(){
                 (a->getPos().y + a->getDim().y > b->getPos().y));
     };
 
-    
-    /*for(int i; i < gameObjects.size(); i++){
-        if (gameObjects[i].collider2d.enableCollision == false){ continue; }
-        if (gameObjects[i].collider2d.collided){
-            if(gameObjects[i].collider2d.collidedWith == nullptr ||
-                !collCheck(&gameObjects[i], gameObjects[i].collider2d.collidedWith)){
-                gameObjects[i].collider2d.collided = false;
-                gameObjects[i].collider2d.collidedWith = &gameObjects[i];
+    std::cout << "function called" << std::endl; 
+    for (auto& objA : gameObjects) {
+        if (!objA.collider2d.enableCollision) {
+            std::cout << "not collideable" << std::endl; 
+            continue;
+        }
+
+        if (objA.collider2d.collided) {
+            if (objA.collider2d.collidedWith == nullptr ||
+                !collCheck(&objA, objA.collider2d.collidedWith)) {
+                objA.collider2d.collided = false;
+                objA.collider2d.collidedWith = nullptr;
             }
-        }else {
-            for (int j; j < gameObjects.size(); j++){
-                if (i == j){break;}
-                if (gameObjects[j].collider2d.enableCollision && collCheck(&gameObjects[i], &gameObjects[j])){
-                    gameObjects[i].collider2d.collided = true;
-                    gameObjects[i].collider2d.collidedWith = &gameObjects[j];
-                    gameObjects[j].collider2d.collided = true;
-                    gameObjects[j].collider2d.collidedWith = &gameObjects[i];
+        } else {
+            for (auto& objB : gameObjects) {
+                if (objA.id == objB.id) {
+                    continue;
+                }
+
+                if (objB.collider2d.enableCollision && collCheck(&objA, &objB)) {
+                    objA.collider2d = {
+                        .collided = true,
+                        .collidedWith = &objB
+                    };
+                    objB.collider2d = { 
+                            .collided = true,
+                            .collidedWith = &objA
+                    };
+                    break; // Exit inner loop on first collision
                 }
             }
         }
     }
-    /*
-    auto& go = gameObjects;
-    for(int i; i <= go.size(); i++){
-        for(int j; j <= go.size(); j++){
-            if (j == i){ break; }
-            //TODO add the collided var to every object and the collidedWith &gameObject to know what it collided with 
-            go[i].collider2d.collided =  (go[i].getPos().x < go[j].getPos().x + go[j].getDim().x) && 
-                        (go[i].getPos().x + go[i].getDim().x > go[j].getPos().x) && 
-                        (go[i].getPos().y < go[j].getPos().y + go[j].getDim().y) && 
-                        (go[i].getPos().y + go[i].getDim().y > go[j].getPos().y);
-            go[j].collider2d.collided = go[i].collider2d.collided;
-            if (go[i].collider2d.collided){ go[i].collider2d.collidedWith = &go[j]; go[j].collider2d.collidedWith = &go[i]; }
-        }
-    }*/
-        
-    return false;
 }
 void gameObject::move(float deltaTime) {
     glm::vec2 normalizedAcc = glm::normalize(acc);
@@ -167,13 +163,13 @@ void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
     for (int i = 0; i < layer.size(); i++){
         for (auto& go : gameObjects){
             if (!go.rendered && go.currentLayer.name == layer[i].name){
-                std::cout << go.collider2d.collided << std::endl;
+                //std::cout << go.collider2d.collided << std::endl;
                 updateByRef(deltaTime, renderer, &gameObjects[go.id - 1]);
-                gameObjects[go.id - 1].rendered = true;
+                go.rendered = true;
             }
         }
     }
-    for(auto& go : gameObjects){ gameObjects[go.id - 1].rendered = false; }
+    for(auto& go : gameObjects){ go.rendered = false; }
 }
 void gameObject::updateByRef(float deltaTime, gl2d::Renderer2D& renderer, gameObject* that){
 	if (that->enableGravity) { that->gravity(); }
