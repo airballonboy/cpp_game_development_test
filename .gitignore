@@ -5,6 +5,4 @@ bin/
 build/
 /.vs
 .idea/
-CMakeSettings.json
 Makefile
-CMakeLists.txt
