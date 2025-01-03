@@ -19,11 +19,11 @@ private:
     bool rendered;
     
     struct renderLayer{
-        std::string name;
-        int order;
+        std::string name = "default";
+        int order = 10;
     };
-    static std::vector<renderLayer> layer; 
-    std::string currentLayer = "default";
+    static std::vector<renderLayer> layer;
+    renderLayer currentLayer;
 
 
     float baseGravity = 9.8;
@@ -36,7 +36,6 @@ private:
 	glm::vec2 pivot = { dim.x / 2, dim.y / 2 };
 	glm::vec2 enemyViewDirection = { 1,0 };
 	bool enableGravity = false;
-    bool enableCollision = false;
 
 public:
     //Variables
@@ -57,9 +56,14 @@ public:
 	static int getObjectCount();
 	void gravity();
 	void move(float);
-    bool checkColission(gameObject);
 	bool isTheSameObject(gameObject);
 
+    struct colliderStruct{
+        bool collided = false;
+        gameObject* collidedWith;
+        bool enableCollision = false;
+        static bool checkColission();
+    }collider2d;
 
 
 	//Setters 

@@ -47,6 +47,7 @@ void printFpsCounter(float deltaTime) {
 	fpsCurrentTimer += deltaTime;
 	fps++;
 	if (fpsCurrentTimer >= 1) {
+        //gameObject::printObjectState(&player);
 		fpsCurrentTimer = 0;
 		std::cout << fps << " ";
 		fps = 0;
@@ -211,7 +212,7 @@ bool gameLogic(float deltaTime) {
         ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
         ImGui::Text("enemy count: %d \n", (int)playData.enemies.size());
         ImGui::Text("object count: %d \n", (int)gameObject::getObjectCount());
-        ImGui::Text("fps: %d \n", (int)(std::round(1 / deltaTime)));
+        ImGui::Text("fps: %d \n", (int)(std::floor(1 / deltaTime)));
         if (ImGui::Button("spawn enemy")) { spawnEnemy(deltaTime); }
         ImGui::End();
     }
