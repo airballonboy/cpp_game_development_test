@@ -55,7 +55,7 @@ jobs:
       run: sudo apt update
 
     - name: dependencie install
-      id: dep ins
+      id: depend
       shell: bash
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev mesa-common-dev
