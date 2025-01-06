@@ -45,6 +45,7 @@ public:
 	textureType currentTextureType;
 	objectType currentType;
 	glm::vec2 currentTextureCoords;
+    bool erased = false;
 
     //functions
 	gameObject(objectType, const char*, textureType = normal, glm::vec2 = { 1, 1 }, glm::vec2 = { 0, 0 }, int = 128);

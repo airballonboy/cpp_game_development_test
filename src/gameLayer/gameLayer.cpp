@@ -200,7 +200,9 @@ bool gameLogic(float deltaTime) {
     for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
 	for (int i = 0; i < playData.bullets.size(); i++) {
 		if (glm::distance(playData.bullets[i].getPos(), player.getPos()) > 5000) { 
-			playData.bullets.erase(playData.bullets.begin() + i); i--; continue; 
+			gameObject::gameObjects[playData.bullets[i].getId() - 1].erased = true;
+			playData.bullets.erase(playData.bullets.begin() + i);
+			i--; continue; 
 		}
 	}
     gameObject::updateAll(deltaTime, renderer);

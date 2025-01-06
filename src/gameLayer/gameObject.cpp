@@ -104,25 +104,24 @@ void gameObject::colliderStruct::checkColission(){
     //under construction 
     //Code here
     auto collCheck = [](gameObject* a, gameObject* b) -> bool {
-        return ((a != b)                                        &&
-                (a->getPos().x < b->getPos().x + b->getDim().x) && 
-                (a->getPos().x + a->getDim().x > b->getPos().x) && 
-                (a->getPos().y < b->getPos().y + b->getDim().y) && 
-                (a->getPos().y + a->getDim().y > b->getPos().y));
+        return ((a != b)                                          &&
+                (a->getPos().x < (b->getPos().x + b->getDim().x)) &&
+                ((a->getPos().x + a->getDim().x) > b->getPos().x) &&
+                (a->getPos().y < (b->getPos().y + b->getDim().y)) &&
+                ((a->getPos().y + a->getDim().y) > b->getPos().y)); 
     };
-
-    std::cout << "function called" << std::endl; 
+    //std::cout << "function called" << std::endl; 
     for (auto& objA : gameObjects) {
-        if (!objA.collider2d.enableCollision) {
-            std::cout << "not collideable" << std::endl; 
+        if (!objA.collider2d.enableCollision && !objA.erased) {
+            //std::cout << "obj with the id:" << objA.id << " is not collideable" << std::endl;
             continue;
         }
 
         if (objA.collider2d.collided) {
-            if (objA.collider2d.collidedWith == nullptr ||
-                !collCheck(&objA, objA.collider2d.collidedWith)) {
+            if (objA.collider2d.collidedWith->erased || !collCheck(&objA, objA.collider2d.collidedWith)) {
                 objA.collider2d.collided = false;
-                objA.collider2d.collidedWith = nullptr;
+                std::cout << "collision disconnected, obj:" << objA.id << " with obj:" << objA.collider2d.collidedWith->id << std::endl;
+                objA.collider2d.collidedWith = &objA;
             }
         } else {
             for (auto& objB : gameObjects) {
@@ -130,15 +129,19 @@ void gameObject::colliderStruct::checkColission(){
                     continue;
                 }
 
-                if (objB.collider2d.enableCollision && collCheck(&objA, &objB)) {
+                if (!objB.erased && objB.collider2d.enableCollision && collCheck(&objA, &objB)) {
                     objA.collider2d = {
                         .collided = true,
-                        .collidedWith = &objB
+                        .collidedWith = &objB,
+                        .enableCollision = objA.collider2d.enableCollision 
                     };
                     objB.collider2d = { 
-                            .collided = true,
-                            .collidedWith = &objA
+						.collided = true,
+						.collidedWith = &objA,
+                        .enableCollision = objB.collider2d.enableCollision 
                     };
+//                    printObjectState(&gameObjects[objA.id - 1]);
+                    std::cout << "collision connected, obj:" << objA.id << " with obj:" << objB.id << std::endl;
                     break; // Exit inner loop on first collision
                 }
             }
@@ -158,12 +161,13 @@ void gameObject::gravity() {
 
 void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
     //the outerLoop goes over every layer and for every layer the inner loop updates every object in the Layer 
-    //HELP gets segFault
+    //still sigfaults 
     colliderStruct::checkColission();
     for (int i = 0; i < layer.size(); i++){
         for (auto& go : gameObjects){
             if (!go.rendered && go.currentLayer.name == layer[i].name){
                 //std::cout << go.collider2d.collided << std::endl;
+                if (go.erased) { continue; }
                 updateByRef(deltaTime, renderer, &gameObjects[go.id - 1]);
                 go.rendered = true;
             }
@@ -206,6 +210,8 @@ void gameObject::printObjectState(gameObject* objectPtr){
     std::cout << "currentTextureCoords.y: " << o.currentTextureCoords.y<< std::endl;
     std::cout << "enableGravity: " << o.enableGravity<< std::endl;
     std::cout << "enableCollision: " << o.collider2d.enableCollision<< std::endl;
+    std::cout << "collided: " << o.collider2d.collided<< std::endl;
+    std::cout << "collidedWith: " << o.collider2d.collidedWith<< std::endl;
 
 
     std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" << std::endl;
