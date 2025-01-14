@@ -53,7 +53,7 @@ public:
 	void update(float, gl2d::Renderer2D&);
 	static void updateByRef(float, gl2d::Renderer2D&, gameObject*);
 	static void updateAll(float, gl2d::Renderer2D&);
-    static void printObjectState(gameObject*);
+    static void printObjectState(int);
 	static int getObjectCount();
 	void gravity();
 	void move(float);

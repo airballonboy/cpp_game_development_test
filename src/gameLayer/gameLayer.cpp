@@ -171,6 +171,10 @@ bool gameLogic(float deltaTime) {
     
 
 
+
+
+
+
     //Mouse direction checking
     glm::vec2 mousePos = platform::getRelMousePosition();
     glm::vec2 screenCenter(player.getPos() - renderer.currentCamera.position);   
@@ -228,7 +232,7 @@ bool gameLogic(float deltaTime) {
 //This function might not be called if the program is forced closed
 void closeGame() {
 
-
+	
 
 }
 

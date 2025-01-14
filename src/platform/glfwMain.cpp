@@ -75,38 +75,31 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 		{
 			platform::internal::setButtonState(platform::Button::Space, state);
 		}
-		else
-		if (key == GLFW_KEY_ENTER)
+		else if (key == GLFW_KEY_ENTER)
 		{
 			platform::internal::setButtonState(platform::Button::Enter, state);
 		}
-		else
-		if (key == GLFW_KEY_ESCAPE)
+		else if (key == GLFW_KEY_ESCAPE)
 		{
 			platform::internal::setButtonState(platform::Button::Escape, state);
 		}
-		else
-		if (key == GLFW_KEY_UP)
+		else if (key == GLFW_KEY_UP)
 		{
 			platform::internal::setButtonState(platform::Button::Up, state);
 		}
-		else
-		if (key == GLFW_KEY_DOWN)
+		else if (key == GLFW_KEY_DOWN)
 		{
 			platform::internal::setButtonState(platform::Button::Down, state);
 		}
-		else
-		if (key == GLFW_KEY_LEFT)
+		else if (key == GLFW_KEY_LEFT)
 		{
 			platform::internal::setButtonState(platform::Button::Left, state);
 		}
-		else
-		if (key == GLFW_KEY_RIGHT)
+		else if (key == GLFW_KEY_RIGHT)
 		{
 			platform::internal::setButtonState(platform::Button::Right, state);
 		}
-		else
-		if (key == GLFW_KEY_LEFT_CONTROL)
+		else if (key == GLFW_KEY_LEFT_CONTROL)
 		{
 			platform::internal::setButtonState(platform::Button::LeftCtrl, state);
 		}

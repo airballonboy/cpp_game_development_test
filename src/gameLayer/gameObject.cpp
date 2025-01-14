@@ -1,4 +1,7 @@
 #include "gameObject.hpp"
+#include "glm/fwd.hpp"
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <gl2d/gl2d.h>
 #include <algorithm>
@@ -59,14 +62,10 @@ void gameObject::addToLayer(gameObject* GO, std::string name){
     if (!check (true, name, &layer)){
         std::cerr << "name doesn't match any layer";
     }
-    GO->currentLayer = {
-        .name = name,
-        .order = find(name, &layer)
-    };
-    gameObjects[GO->id - 1].currentLayer = {
-        .name = name,
-        .order = GO->currentLayer.order
-    };
+    GO->currentLayer.name = name;
+    GO->currentLayer.order = find(name, &layer);
+    gameObjects[GO->id - 1].currentLayer.name = name;
+    gameObjects[GO->id - 1].currentLayer.order = GO->currentLayer.order;
 }
 int gameObject::getObjectCount() {
 	return objectCount;
@@ -100,17 +99,15 @@ bool gameObject::isTheSameObject(gameObject otherObject) {
 }
 
 void gameObject::colliderStruct::checkColission(){
-    //TODO make collision checks
-    //under construction 
-    //Code here
-    auto collCheck = [](gameObject* a, gameObject* b) -> bool {
-        return ((a != b)                                          &&
-                (a->getPos().x < (b->getPos().x + b->getDim().x)) &&
-                ((a->getPos().x + a->getDim().x) > b->getPos().x) &&
-                (a->getPos().y < (b->getPos().y + b->getDim().y)) &&
-                ((a->getPos().y + a->getDim().y) > b->getPos().y)); 
-    };
-    //std::cout << "function called" << std::endl; 
+	auto collCheck = [](int32_t aId, int32_t bId, glm::vec2 aPos, glm::vec2 bPos, glm::vec2 aDim, glm::vec2 bDim)-> bool{
+			return ((aId != bId)                     &&
+					(aPos.x < (bPos.x + bDim.x)) &&
+					((aPos.x + aDim.x) > bPos.x) &&
+					(aPos.y < (bPos.y + bDim.y)) &&
+					((aPos.y + aDim.y) > bPos.y)); 
+	 
+	}; 
+    gameObject nu;
     for (auto& objA : gameObjects) {
         if (!objA.collider2d.enableCollision && !objA.erased) {
             //std::cout << "obj with the id:" << objA.id << " is not collideable" << std::endl;
@@ -118,10 +115,12 @@ void gameObject::colliderStruct::checkColission(){
         }
 
         if (objA.collider2d.collided) {
-            if (objA.collider2d.collidedWith->erased || !collCheck(&objA, objA.collider2d.collidedWith)) {
+            if (objA.collider2d.collidedWith->erased || 
+				!collCheck(objA.id, objA.collider2d.collidedWith->id, objA.pos, objA.collider2d.collidedWith->pos,
+					objA.dim, objA.collider2d.collidedWith->dim)) {
                 objA.collider2d.collided = false;
-                std::cout << "collision disconnected, obj:" << objA.id << " with obj:" << objA.collider2d.collidedWith->id << std::endl;
-                objA.collider2d.collidedWith = &objA;
+                objA.collider2d.collidedWith = &nu;
+                //std::cout << objA.collider2d.collided << std::endl;
             }
         } else {
             for (auto& objB : gameObjects) {
@@ -129,19 +128,18 @@ void gameObject::colliderStruct::checkColission(){
                     continue;
                 }
 
-                if (!objB.erased && objB.collider2d.enableCollision && collCheck(&objA, &objB)) {
+                if (!objB.erased && objB.collider2d.enableCollision && collCheck(objA.id, objB.id, objA.pos, objB.pos, objA.dim, objB.dim)) {
                     objA.collider2d = {
                         .collided = true,
                         .collidedWith = &objB,
-                        .enableCollision = objA.collider2d.enableCollision 
+                        .enableCollision = true
                     };
                     objB.collider2d = { 
 						.collided = true,
 						.collidedWith = &objA,
-                        .enableCollision = objB.collider2d.enableCollision 
+                        .enableCollision = true
                     };
-//                    printObjectState(&gameObjects[objA.id - 1]);
-                    std::cout << "collision connected, obj:" << objA.id << " with obj:" << objB.id << std::endl;
+                    //std::cout << "collision connected, obj:" << objA.id << " with obj:" << objB.id << std::endl;
                     break; // Exit inner loop on first collision
                 }
             }
@@ -161,7 +159,6 @@ void gameObject::gravity() {
 
 void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
     //the outerLoop goes over every layer and for every layer the inner loop updates every object in the Layer 
-    //still sigfaults 
     colliderStruct::checkColission();
     for (int i = 0; i < layer.size(); i++){
         for (auto& go : gameObjects){
@@ -186,37 +183,39 @@ void gameObject::updateByRef(float deltaTime, gl2d::Renderer2D& renderer, gameOb
             {},glm::degrees(that->rotation) + 90.f, that->objectAtlas.get(that->currentTextureCoords.x, that->currentTextureCoords.y));
 	}
 }
-void gameObject::printObjectState(gameObject* objectPtr){
-    gameObject o = *objectPtr;
-    std::cout << "id: " << o.id<< std::endl;
-    std::cout << "currentTextureType: " << o.currentTextureType<< std::endl;
-    std::cout << "currentType: " << o.currentType<< std::endl;
-    std::cout << "currentSortingLayer: " << o.currentLayer.name << std::endl;
-    std::cout << "currentSortingLayer: " << o.currentLayer.order << std::endl;
-    std::cout << "baseGravity: " << o.baseGravity<< std::endl;
-    std::cout << "rotation: " << o.rotation<< std::endl;
-    std::cout << "turningSpeed: " << o.turningSpeed<< std::endl;
-    std::cout << "acc.x: " << o.acc.x<< std::endl;
-    std::cout << "acc.y: " << o.acc.y<< std::endl;
-    std::cout << "vel.x: " << o.vel.x<< std::endl;
-    std::cout << "vel.y: " << o.vel.y<< std::endl;
-    std::cout << "pos.x: " << o.pos.x<< std::endl;
-    std::cout << "pos.y: " << o.pos.y<< std::endl;
-    std::cout << "dim.x: " << o.dim.x<< std::endl;
-    std::cout << "dim.y: " << o.dim.y<< std::endl;
-    std::cout << "pivot.x: " << o.pivot.x<< std::endl;
-    std::cout << "pivot.y: " << o.pivot.y<< std::endl;
-    std::cout << "currentTextureCoords.x: " << o.currentTextureCoords.x<< std::endl;
-    std::cout << "currentTextureCoords.y: " << o.currentTextureCoords.y<< std::endl;
-    std::cout << "enableGravity: " << o.enableGravity<< std::endl;
-    std::cout << "enableCollision: " << o.collider2d.enableCollision<< std::endl;
-    std::cout << "collided: " << o.collider2d.collided<< std::endl;
-    std::cout << "collidedWith: " << o.collider2d.collidedWith<< std::endl;
+void gameObject::printObjectState(int id){
+    gameObject o = gameObjects[id - 1];
+    std::cout << "id: "                  	<< o.id							<< std::endl;
+    std::cout << "currentTextureType: "  	<< o.currentTextureType			<< std::endl;
+    std::cout << "currentType: "         	<< o.currentType				<< std::endl;
+    std::cout << "currentSortingLayer: " 	<< o.currentLayer.name 			<< std::endl;
+    std::cout << "currentSortingLayer: " 	<< o.currentLayer.order 		<< std::endl;
+    std::cout << "baseGravity: "  		 	<< o.baseGravity				<< std::endl;
+    std::cout << "rotation: " 			 	<< o.rotation					<< std::endl;
+    std::cout << "turningSpeed: " 		 	<< o.turningSpeed				<< std::endl;
+    std::cout << "acc.x: " 				 	<< o.acc.x						<< std::endl;
+    std::cout << "acc.y: " 				 	<< o.acc.y						<< std::endl;
+    std::cout << "vel.x: " 				 	<< o.vel.x						<< std::endl;
+    std::cout << "vel.y: " 				 	<< o.vel.y						<< std::endl;
+    std::cout << "pos.x: " 	  			 	<< o.pos.x						<< std::endl;
+    std::cout << "pos.y: " 	       		 	<< o.pos.y						<< std::endl;
+    std::cout << "dim.x: " 			     	<< o.dim.x						<< std::endl;
+    std::cout << "dim.y: " 				 	<< o.dim.y						<< std::endl;
+    std::cout << "pivot.x: " 			 	<< o.pivot.x					<< std::endl;
+    std::cout << "pivot.y: " 			 	<< o.pivot.y					<< std::endl;
+    std::cout << "currentTextureCoords.x: " << o.currentTextureCoords.x		<< std::endl;
+    std::cout << "currentTextureCoords.y: " << o.currentTextureCoords.y		<< std::endl;
+    std::cout << "enableGravity: " 			<< o.enableGravity				<< std::endl;
+    std::cout << "enableCollision: " 		<< o.collider2d.enableCollision << std::endl;
+    std::cout << "collided: "          		<< o.collider2d.collided		<< std::endl;
+    std::cout << "collidedWith: " 			<< o.collider2d.collidedWith	<< std::endl;
 
 
     std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" << std::endl;
 }
 void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
+	// NOTE: 
+	// No longer works / Not needed
 	if (enableGravity) { this->gravity(); }
 	if (acc != glm::vec2{0, 0}) { this->move(deltaTime); this->setPos(this->getPos().x+this->getAcc().x, this->getPos().y+this->getAcc().y); }
 	if (currentTextureType == normal) {
