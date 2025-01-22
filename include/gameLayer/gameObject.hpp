@@ -12,7 +12,7 @@
 class gameObject {
 private:
 
-	int32_t id;
+	size_t id;
 
 	gl2d::Texture objectTexture;
 	gl2d::TextureAtlasPadding objectAtlas;
@@ -24,6 +24,12 @@ private:
     };
     static std::vector<renderLayer> layer;
     renderLayer currentLayer;
+
+	struct renderOrderStruct{
+		int order = 0;
+		size_t goId;
+	};
+	static std::vector<renderOrderStruct> renderOrder;
 
 
     float baseGravity = 9.8;
