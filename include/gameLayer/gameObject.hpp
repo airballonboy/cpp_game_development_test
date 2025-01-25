@@ -1,4 +1,5 @@
 #pragma once
+#include "textureLoader.hpp"
 #include <gl2d/gl2d.h>
 #include <vector>
 
@@ -17,6 +18,7 @@ private:
 	gl2d::Texture objectTexture;
 	gl2d::TextureAtlasPadding objectAtlas;
     bool rendered;
+	textureLoader::textureCTX currentTextureCTX;
     
     struct renderLayer{
         std::string name = "default";

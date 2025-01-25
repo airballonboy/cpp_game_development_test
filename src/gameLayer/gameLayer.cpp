@@ -30,6 +30,7 @@ struct playerData
 //Declarations
 gl2d::Renderer2D renderer;
 float fpsCurrentTimer;
+float currentReloadTimer;
 float fps;
 const int BGs = 4;
 gl2d::Texture backGroundTexture[BGs];
@@ -199,7 +200,6 @@ bool gameLogic(float deltaTime) {
 		cameraSizeChange(deltaTime);
 		bulletShooting(deltaTime, mouseDirection);
 		for (auto& e : playData.enemies) { enemyacc(deltaTime, e); }
-		if (platform::isButtonReleased(platform::Button::L)) gameObject::tempReload();
 	}
 
 	{//Rendering everything
@@ -223,7 +223,10 @@ bool gameLogic(float deltaTime) {
         ImGui::Text("enemy count: %d \n", (int)playData.enemies.size());
         ImGui::Text("object count: %d \n", (int)gameObject::getObjectCount());
         ImGui::Text("fps: %d \n", (int)(std::floor(1 / deltaTime)));
-        if (ImGui::Button("spawn enemy")) { spawnEnemy(deltaTime); }
+        if (ImGui::Button("spawn enemy")) spawnEnemy(deltaTime);
+		currentReloadTimer += deltaTime;
+		if (ImGui::Button("reload textures") && (currentReloadTimer >= 1)){ gameObject::tempReload(); currentReloadTimer = 0;}
+
         ImGui::End();
     }
 

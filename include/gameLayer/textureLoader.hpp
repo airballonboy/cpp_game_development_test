@@ -13,16 +13,22 @@ public:
 		int atlasdim= 128; 
 		glm::vec2 atlasPoint = { 0, 0 };
 	};
+	struct textureStruct{
+		const char* loadedTextureName;
+		gl2d::Texture loadedTexture;
+		gl2d::TextureAtlasPadding loadedAtlas;
+	};
+	//static std::vector<const char*> loadedTexturesNames;
+	//std::vector<gl2d::Texture> loadedTextures;
+	//std::vector<gl2d::TextureAtlasPadding> loadedAtlases;
+	static std::vector<textureStruct> textures;
+	static std::vector<textureCTX> textureCTXs;
 
-	std::vector<const char*> loadedTexturesNames;
-	std::vector<gl2d::Texture> loadedTextures;
-	std::vector<gl2d::TextureAtlasPadding> loadedAtlases;
-	std::vector<textureCTX> textureCTXs;
-
-	int checkTextures(textureCTX);
-	void reloadTextures();
+	static int checkTextures(textureCTX);
+	static void reloadTextures();
+	static int getAtlasIterator(textureCTX);
 
 private:
-	void forceLoadTexture(textureCTX);
+	static void forceLoadTexture(textureCTX, bool);
 
 };

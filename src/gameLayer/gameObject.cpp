@@ -10,7 +10,7 @@
 #include <textureLoader.hpp>
 
 
-textureLoader textureLoad;
+//textureLoader textureLoad;
 
 int objectCount = 0;
 // Definition of static member
@@ -32,7 +32,7 @@ void gameObject::newLayer(std::string name, int order){
 void gameObject::addToLayer(gameObject* GO, std::string name){
     auto check = [](bool C, std::string thisName, std::vector<renderLayer>* L){
 		for (renderLayer RL : *L) {
-			if (RL.name == thisName) C = true;break;
+			if (RL.name == thisName) { C = true;break; }
 			C = false;
 		}
 		return C;
@@ -66,10 +66,12 @@ gameObject::gameObject(objectType _type, const char* _textureFile, textureType _
 	currentTextureType = _currentTextureType;
 	currentType = _type;
 	if (currentTextureType == normal) {
-		objectTexture = textureLoad.loadedTextures[textureLoad.checkTextures({_textureFile, false, false ,true, true})];
+		currentTextureCTX = {_textureFile, false, false ,true, true};
+		objectTexture = textureLoader::textures[textureLoader::checkTextures(currentTextureCTX)].loadedTexture;
 	} else if (currentTextureType == atlas) {
-		objectTexture = textureLoad.loadedTextures[textureLoad.checkTextures({_textureFile, true, false, true, true, _atlasdim, _atlasPoint})];
-		objectAtlas   = textureLoad.loadedAtlases[textureLoad.checkTextures({_textureFile, true, false, true, true, _atlasdim, _atlasPoint})];
+		currentTextureCTX = {_textureFile, true, false, true, true, _atlasdim, _atlasPoint};
+		objectTexture = textureLoader::textures[textureLoader::checkTextures(currentTextureCTX)].loadedTexture;
+		objectAtlas   = textureLoader::textures[textureLoader::getAtlasIterator(currentTextureCTX)].loadedAtlas;
 	}
     gameObjects.emplace_back(*this);
     addToLayer(&gameObjects[this->id - 1], currentLayer.name);
@@ -166,7 +168,15 @@ void gameObject::updateByRef(float deltaTime, gl2d::Renderer2D& renderer, gameOb
 	}
 }
 void gameObject::tempReload(){
-	textureLoad.reloadTextures();
+	textureLoader::reloadTextures();
+	for(auto& obj : gameObjects){
+		if (obj.currentTextureType == normal) {
+			obj.objectTexture = textureLoader::textures[textureLoader::checkTextures(obj.currentTextureCTX)].loadedTexture;
+		} else if (obj.currentTextureType == atlas) {
+			obj.objectTexture = textureLoader::textures[textureLoader::checkTextures(obj.currentTextureCTX)].loadedTexture;
+			obj.objectAtlas   = textureLoader::textures[textureLoader::getAtlasIterator(obj.currentTextureCTX)].loadedAtlas;
+		}
+	}
 }
 
 void gameObject::printObjectState(int id){
