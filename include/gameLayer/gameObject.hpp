@@ -64,6 +64,7 @@ public:
 	void gravity();
 	void move(float);
 	bool isTheSameObject(gameObject);
+	static void tempReload();
 
     struct colliderStruct{
         bool collided = false;
@@ -109,12 +110,4 @@ public:
 
 
 };
-class loadOnceClass {
-public:
-	std::vector<const char*> loadedTexturesNames;
-	std::vector<gl2d::Texture> loadedTextures;
-	std::vector<gl2d::TextureAtlasPadding> loadedTextureAtlases;
 
-	int checkTextures(const char*, bool, bool = false, bool = true, bool = true, int = 128, glm::vec2 = { 0, 0 });
-
-};

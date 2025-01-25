@@ -1,5 +1,4 @@
 #include "gameObject.hpp"
-#include "textureLoader.hpp"
 #include "glm/fwd.hpp"
 #include <cstddef>
 #include <string>
@@ -8,6 +7,7 @@
 #include <ostream>
 #include <vector>
 #include <iostream>
+#include <textureLoader.hpp>
 
 
 textureLoader textureLoad;
@@ -30,11 +30,16 @@ void gameObject::newLayer(std::string name, int order){
     });
 }
 void gameObject::addToLayer(gameObject* GO, std::string name){
-    auto check = [](bool C, std::string thisName, std::vector<renderLayer>* L)
-        {for (renderLayer RL : *L) {if (RL.name == thisName){C = true;break;} C = false;}return C;};
+    auto check = [](bool C, std::string thisName, std::vector<renderLayer>* L){
+		for (renderLayer RL : *L) {
+			if (RL.name == thisName) C = true;break;
+			C = false;
+		}
+		return C;
+	};
     auto find = [](std::string thisName, std::vector<renderLayer>* L){ 
         for(renderLayer RL : *L){
-            if (RL.name == thisName){return RL.order;}
+            if (RL.name == thisName) return RL.order;
         }
         return 0;
     };
@@ -61,10 +66,10 @@ gameObject::gameObject(objectType _type, const char* _textureFile, textureType _
 	currentTextureType = _currentTextureType;
 	currentType = _type;
 	if (currentTextureType == normal) {
-		objectTexture = textureLoad.loadedTextures[textureLoad.checkTextures(_textureFile, false, false ,true, true)];
+		objectTexture = textureLoad.loadedTextures[textureLoad.checkTextures({_textureFile, false, false ,true, true})];
 	} else if (currentTextureType == atlas) {
-		objectTexture = textureLoad.loadedTextures[textureLoad.checkTextures(_textureFile, true, false, true, true, _atlasdim, _atlasPoint)];
-		objectAtlas = textureLoad.loadedTextureAtlases[textureLoad.checkTextures(_textureFile, true, false, true, true, _atlasdim, _atlasPoint)];
+		objectTexture = textureLoad.loadedTextures[textureLoad.checkTextures({_textureFile, true, false, true, true, _atlasdim, _atlasPoint})];
+		objectAtlas   = textureLoad.loadedAtlases[textureLoad.checkTextures({_textureFile, true, false, true, true, _atlasdim, _atlasPoint})];
 	}
     gameObjects.emplace_back(*this);
     addToLayer(&gameObjects[this->id - 1], currentLayer.name);
@@ -130,16 +135,14 @@ void gameObject::gravity() {
 void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
     //the outerLoop goes over every layer and for every layer the inner loop updates every object in the Layer 
 	// NOTE: needs a refactor
-	int j = 0;
+	int currentRenderOrder = 0;
     colliderStruct::checkColission();
     for (size_t i = 0; i < layer.size(); i++){
         for (auto& go : gameObjects){
+			if (go.erased) continue;
             if (!go.rendered && (go.currentLayer.name == layer[i].name)){
-                if (go.erased) continue;
-				renderOrderStruct ro = {j, go.id};
-				renderOrder.push_back(ro);
-				j++;
-                //updateByRef(deltaTime, renderer, &gameObjects[go.id - 1]);
+				renderOrder.push_back({currentRenderOrder, go.id});
+				currentRenderOrder++;
                 go.rendered = true;
             }
         }
@@ -147,9 +150,9 @@ void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
 	std::sort(renderOrder.begin(), renderOrder.end(), [](const renderOrderStruct& a, const renderOrderStruct& b){
         return a.order < b.order;
     });
-	for(auto& RO : renderOrder){ updateByRef(deltaTime, renderer, &gameObjects[RO.goId - 1]); }
+	for(auto& ro : renderOrder) updateByRef(deltaTime, renderer, &gameObjects[ro.goId - 1]);
+    for(auto& go : gameObjects) go.rendered = false;
 	renderOrder.clear();
-    for(auto& go : gameObjects){ go.rendered = false; }
 }
 void gameObject::updateByRef(float deltaTime, gl2d::Renderer2D& renderer, gameObject* obj){
 	if (obj->enableGravity) obj->gravity();
@@ -162,8 +165,12 @@ void gameObject::updateByRef(float deltaTime, gl2d::Renderer2D& renderer, gameOb
             {},glm::degrees(obj->rotation) + 90.f, obj->objectAtlas.get(obj->currentTextureCoords.x, obj->currentTextureCoords.y));
 	}
 }
+void gameObject::tempReload(){
+	textureLoad.reloadTextures();
+}
+
 void gameObject::printObjectState(int id){
-    gameObject o = gameObjects[id - 1];
+    gameObject& o = gameObjects[id - 1];
     std::cout << "id: "                  	<< o.id							<< std::endl;
     std::cout << "currentTextureType: "  	<< o.currentTextureType			<< std::endl;
     std::cout << "currentType: "         	<< o.currentType				<< std::endl;
