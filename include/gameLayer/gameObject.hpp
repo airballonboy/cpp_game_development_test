@@ -1,4 +1,5 @@
 #pragma once
+#include "textureLoader.hpp"
 #include <gl2d/gl2d.h>
 #include <vector>
 
@@ -12,11 +13,12 @@
 class gameObject {
 private:
 
-	int32_t id;
+	size_t id;
 
 	gl2d::Texture objectTexture;
 	gl2d::TextureAtlasPadding objectAtlas;
     bool rendered;
+	textureLoader::textureCTX currentTextureCTX;
     
     struct renderLayer{
         std::string name = "default";
@@ -24,6 +26,12 @@ private:
     };
     static std::vector<renderLayer> layer;
     renderLayer currentLayer;
+
+	struct renderOrderStruct{
+		int order = 0;
+		size_t goId;
+	};
+	static std::vector<renderOrderStruct> renderOrder;
 
 
     float baseGravity = 9.8;
@@ -53,11 +61,12 @@ public:
 	void update(float, gl2d::Renderer2D&);
 	static void updateByRef(float, gl2d::Renderer2D&, gameObject*);
 	static void updateAll(float, gl2d::Renderer2D&);
-    static void printObjectState(gameObject*);
+    static void printObjectState(int);
 	static int getObjectCount();
 	void gravity();
 	void move(float);
 	bool isTheSameObject(gameObject);
+	static void tempReload();
 
     struct colliderStruct{
         bool collided = false;
@@ -103,12 +112,4 @@ public:
 
 
 };
-class loadOnceClass {
-public:
-	std::vector<const char*> loadedTexturesNames;
-	std::vector<gl2d::Texture> loadedTextures;
-	std::vector<gl2d::TextureAtlasPadding> loadedTextureAtlases;
 
-	int checkTextures(const char*, bool, bool = false, bool = true, bool = true, int = 128, glm::vec2 = { 0, 0 });
-
-};

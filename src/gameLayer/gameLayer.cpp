@@ -30,6 +30,7 @@ struct playerData
 //Declarations
 gl2d::Renderer2D renderer;
 float fpsCurrentTimer;
+float currentReloadTimer;
 float fps;
 const int BGs = 4;
 gl2d::Texture backGroundTexture[BGs];
@@ -104,6 +105,7 @@ void enemyacc(float DT, gameObject &e) {
 		newDirection = glm::vec2(directionToPlayer.y, -directionToPlayer.x);
 	} else{ newDirection = DT * e.getTurningSpeed() * directionToPlayer + e.getEnemyViewDirection(); }
 	
+	e.setRotation(atan2(directionToPlayer.y , -directionToPlayer.x));
 	e.setEnemyViewDirection(glm::normalize(newDirection));
 	e.setPos(e.getPos().x + e.getEnemyViewDirection().x * DT * e.getVel().x, e.getPos().y + e.getEnemyViewDirection().y * DT * e.getVel().y);
 }
@@ -171,6 +173,10 @@ bool gameLogic(float deltaTime) {
     
 
 
+
+
+
+
     //Mouse direction checking
     glm::vec2 mousePos = platform::getRelMousePosition();
     glm::vec2 screenCenter(player.getPos() - renderer.currentCamera.position);   
@@ -189,35 +195,38 @@ bool gameLogic(float deltaTime) {
 	renderer.currentCamera.follow(player.getPos(), deltaTime * 450, 10, 50, w, h);
 
 	
-	//Update entities and key checks
-	playerMove(deltaTime);
-	cameraSizeChange(deltaTime);
-	bulletShooting(deltaTime, mouseDirection);
-	for (auto& e : playData.enemies) { enemyacc(deltaTime, e); }
-
-
-	//Rendering everything
-    for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
-	for (int i = 0; i < playData.bullets.size(); i++) {
-		if (glm::distance(playData.bullets[i].getPos(), player.getPos()) > 5000) { 
-			gameObject::gameObjects[playData.bullets[i].getId() - 1].erased = true;
-			playData.bullets.erase(playData.bullets.begin() + i);
-			i--; continue; 
-		}
+	{//Update entities and key checks
+		playerMove(deltaTime);
+		cameraSizeChange(deltaTime);
+		bulletShooting(deltaTime, mouseDirection);
+		for (auto& e : playData.enemies) { enemyacc(deltaTime, e); }
 	}
-    gameObject::updateAll(deltaTime, renderer);
 
+	{//Rendering everything
+		for (int i = 0; i < BGs; i++) { tiledRenderer[i].render(renderer); }
+		for (int i = 0; i < playData.bullets.size(); i++) {
+			if (glm::distance(playData.bullets[i].getPos(), player.getPos()) > 5000) { 
+				gameObject::gameObjects[playData.bullets[i].getId() - 1].erased = true;
+				playData.bullets.erase(playData.bullets.begin() + i);
+				i--; continue; 
+			}
+		}
+		gameObject::updateAll(deltaTime, renderer);
+	}
 
 	//Reset player acc
 	player.setAcc(0, 0);
 
     {//ImGui debug Ui
-        ImGui::Begin("debug");
+		ImGui::Begin("debug");
         ImGui::Text("Bullets count: %d \n", (int)playData.bullets.size());
         ImGui::Text("enemy count: %d \n", (int)playData.enemies.size());
         ImGui::Text("object count: %d \n", (int)gameObject::getObjectCount());
         ImGui::Text("fps: %d \n", (int)(std::floor(1 / deltaTime)));
-        if (ImGui::Button("spawn enemy")) { spawnEnemy(deltaTime); }
+        if (ImGui::Button("spawn enemy")) spawnEnemy(deltaTime);
+		currentReloadTimer += deltaTime;
+		if (ImGui::Button("reload textures") && (currentReloadTimer >= 1)){ gameObject::tempReload(); currentReloadTimer = 0;}
+
         ImGui::End();
     }
 
@@ -228,7 +237,7 @@ bool gameLogic(float deltaTime) {
 //This function might not be called if the program is forced closed
 void closeGame() {
 
-
+	
 
 }
 
