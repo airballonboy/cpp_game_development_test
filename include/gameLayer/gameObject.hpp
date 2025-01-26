@@ -108,7 +108,8 @@ public:
 
     static void newLayer(std::string, int);
     static void addToLayer(gameObject*, std::string);
-   
+  	static bool check(std::string, std::vector<renderLayer>*);
+ 
 
 
 };

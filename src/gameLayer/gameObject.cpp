@@ -24,27 +24,30 @@ void gameObject::newLayer(std::string name, int order){
         .name = name,
         .order = order
     };
+	for(auto& l : layer) if(l.name == L.name){ std::cerr << "layer already exists" << std::endl;return; };
     layer.push_back(L);
     std::sort(layer.begin(), layer.end(), [](const renderLayer& a, const renderLayer& b){
         return a.order < b.order;
     });
 }
+bool gameObject::check(std::string thisName, std::vector<renderLayer>* L){
+	bool C;
+	for (renderLayer RL : *L) {
+		if (RL.name == thisName) { C = true;break; }
+		C = false;
+	}
+	return C;
+}
+
 void gameObject::addToLayer(gameObject* GO, std::string name){
-    auto check = [](bool C, std::string thisName, std::vector<renderLayer>* L){
-		for (renderLayer RL : *L) {
-			if (RL.name == thisName) { C = true;break; }
-			C = false;
-		}
-		return C;
-	};
-    auto find = [](std::string thisName, std::vector<renderLayer>* L){ 
+	auto find = [](std::string thisName, std::vector<renderLayer>* L){ 
         for(renderLayer RL : *L){
             if (RL.name == thisName) return RL.order;
         }
         return 0;
     };
     
-    if (!check (true, name, &layer)){
+    if (!check (name, &layer)){
         std::cerr << "name doesn't match any layer";
     }
     GO->currentLayer.name = name;
@@ -74,7 +77,8 @@ gameObject::gameObject(objectType _type, const char* _textureFile, textureType _
 		objectAtlas   = textureLoader::textures[textureLoader::getAtlasIterator(currentTextureCTX)].loadedAtlas;
 	}
     gameObjects.emplace_back(*this);
-    addToLayer(&gameObjects[this->id - 1], currentLayer.name);
+	if(!check("default", &layer)) newLayer("default", 10);
+    addToLayer(&gameObjects[this->id - 1], "default");
 }
 gameObject::gameObject(){}
 
