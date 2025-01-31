@@ -1,6 +1,7 @@
 #pragma once
 #include "textureLoader.hpp"
 #include <gl2d/gl2d.h>
+#include <string>
 #include <vector>
 
 //NOTE TO FUTURE SELF
@@ -13,7 +14,9 @@
 class gameObject {
 private:
 
+	inline static size_t currentObjectCount = 0; 
 	size_t id;
+	std::string tag;
 
 	gl2d::Texture objectTexture;
 	gl2d::TextureAtlasPadding objectAtlas;
@@ -24,14 +27,14 @@ private:
         std::string name = "default";
         int order = 10;
     };
-    static std::vector<renderLayer> layer;
+    inline static std::vector<renderLayer> layer;
     renderLayer currentLayer;
 
 	struct renderOrderStruct{
 		int order = 0;
 		size_t goId;
 	};
-	static std::vector<renderOrderStruct> renderOrder;
+	inline static std::vector<renderOrderStruct> renderOrder;
 
 
     float baseGravity = 9.8;
@@ -47,7 +50,7 @@ private:
 
 public:
     //Variables
-    static std::vector<gameObject> gameObjects; // Declaration
+    inline static std::vector<gameObject> gameObjects; // Declaration
 	enum objectType { bullet, background, entity, staticEntity };
 	enum textureType { normal, atlas };
 	textureType currentTextureType;
@@ -77,6 +80,7 @@ public:
 
 
 	//Setters 
+	void setTag(std::string);
     void setAcc(float, float);
     void setVel(float, float);
     void setPos(float, float);
@@ -92,6 +96,7 @@ public:
 
     //Getters
 	int getId();
+	std::string getTag();
     glm::vec2 getAcc();
     glm::vec2 getVel();
     glm::vec2 getPos();

@@ -22,7 +22,7 @@ int textureLoader::checkTextures(textureLoader::textureCTX ctx) {
 		return {0, "not found"};
 	};
 
-	if(getIterator().err != "not found") return getIterator().i; 
+	if(getIterator().err == "") return getIterator().i; 
 	forceLoadTexture(ctx, false);
 	return getIterator().i;
 }

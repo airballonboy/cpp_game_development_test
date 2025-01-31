@@ -10,22 +10,11 @@
 #include <textureLoader.hpp>
 
 
-//textureLoader textureLoad;
-
-int objectCount = 0;
-// Definition of static member
-std::vector<gameObject> gameObject::gameObjects;
-std::vector<gameObject::renderLayer> gameObject::layer;
-std::vector<gameObject::renderOrderStruct> gameObject::renderOrder;
 
 
 void gameObject::newLayer(std::string name, int order){
-    renderLayer L = {
-        .name = name,
-        .order = order
-    };
-	for(auto& l : layer) if(l.name == L.name){ std::cerr << "layer already exists" << std::endl;return; };
-    layer.push_back(L);
+	for(auto& l : layer) if(l.name == name){ std::cerr << "layer already exists" << std::endl;return; };
+    layer.emplace_back(name, order);
     std::sort(layer.begin(), layer.end(), [](const renderLayer& a, const renderLayer& b){
         return a.order < b.order;
     });
@@ -56,15 +45,15 @@ void gameObject::addToLayer(gameObject* GO, std::string name){
     gameObjects[GO->id - 1].currentLayer.order = GO->currentLayer.order;
 }
 int gameObject::getObjectCount() {
-	return objectCount;
+	return currentObjectCount;
 }
 
 //Creating the object and loading it's texture if it isn't loaded
 gameObject::gameObject(objectType _type, const char* _textureFile, textureType _currentTextureType
                             , glm::vec2 _atlasPoint, glm::vec2 _texturePoint, int _atlasdim) {
 
-	objectCount++;
-	id = objectCount;
+	currentObjectCount++;
+	id = currentObjectCount;
 	currentTextureCoords = _texturePoint;
 	currentTextureType = _currentTextureType;
 	currentType = _type;
@@ -147,7 +136,7 @@ void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
         for (auto& go : gameObjects){
 			if (go.erased) continue;
             if (!go.rendered && (go.currentLayer.name == layer[i].name)){
-				renderOrder.push_back({currentRenderOrder, go.id});
+				renderOrder.emplace_back(currentRenderOrder, go.id);
 				currentRenderOrder++;
                 go.rendered = true;
             }
@@ -234,50 +223,54 @@ void gameObject::update(float deltaTime, gl2d::Renderer2D& renderer) {
 
 
 //Setters
-void gameObject::setDim(float newDimX, float newDimY) {
-	this->dim = { newDimX, newDimY };
+void gameObject::setTag(std::string _tag){
+	this->tag = _tag;
+	gameObjects[(this->id - 1)].tag = this->tag;
+}
+void gameObject::setDim(float _dimX, float _dimY) {
+	this->dim = { _dimX, _dimY };
 	this->pivot = { this->dim.x / 2, this->dim.y / 2 };
     gameObjects[(this->id - 1)].dim = this->dim;
     gameObjects[(this->id - 1)].pivot = this->pivot;
 }
-void gameObject::setAcc(float newAccX, float newAccY){
-    this->acc = { newAccX, newAccY };
+void gameObject::setAcc(float _accX, float _accY){
+    this->acc = { _accX, _accY };
     gameObjects[(this->id - 1)].acc = this->acc;
 }
-void gameObject::setVel(float newVelX, float newVelY){
-    this->vel = { newVelX, newVelY };
+void gameObject::setVel(float _velX, float _velY){
+    this->vel = { _velX, _velY };
     gameObjects[(this->id - 1)].vel = this->vel;
 }
-void gameObject::setPos(float newPosX, float newPosY){
-    this->pos = { newPosX, newPosY };
+void gameObject::setPos(float _posX, float _posY){
+    this->pos = { _posX, _posY };
     gameObjects[(this->id - 1)].pos = this->pos;
 }
-void gameObject::setPivot(float newPivotX, float newPivotY){
-    this->pivot = { newPivotX, newPivotY };
+void gameObject::setPivot(float _pivotX, float _pivotY){
+    this->pivot = { _pivotX, _pivotY };
     gameObjects[(this->id - 1)].pivot = this->pivot;
 }
-void gameObject::setEnemyViewDirection(glm::vec2 newDir){
-    this->enemyViewDirection = newDir;
+void gameObject::setEnemyViewDirection(glm::vec2 _dir){
+    this->enemyViewDirection = _dir;
     gameObjects[(this->id - 1)].enemyViewDirection = this->enemyViewDirection;
 }
-void gameObject::setGravityBool(bool newGravityBool){
-    this->enableGravity = newGravityBool;
+void gameObject::setGravityBool(bool _gravityBool){
+    this->enableGravity = _gravityBool;
     gameObjects[(this->id - 1)].enableGravity = this->enableGravity;
 }
-void gameObject::setCollisionBool(bool newCollisionBool){
-    this->collider2d.enableCollision = newCollisionBool;
+void gameObject::setCollisionBool(bool _collisionBool){
+    this->collider2d.enableCollision = _collisionBool;
     gameObjects[(this->id - 1)].collider2d.enableCollision = this->collider2d.enableCollision;
 }
-void gameObject::setBaseGravity(float newBaseGravity){
-    this->baseGravity = newBaseGravity;
+void gameObject::setBaseGravity(float _baseGravity){
+    this->baseGravity = _baseGravity;
     gameObjects[(this->id - 1)].baseGravity = this->baseGravity;
 }
-void gameObject::setRotation(float newRotation){
-    this->rotation = newRotation;
+void gameObject::setRotation(float _rotation){
+    this->rotation = _rotation;
     gameObjects[(this->id - 1)].rotation = this->rotation;
 }
-void gameObject::setTurningSpeed(float newTurningSpeed){
-    this->turningSpeed = newTurningSpeed;
+void gameObject::setTurningSpeed(float _turningSpeed){
+    this->turningSpeed = _turningSpeed;
     gameObjects[(this->id - 1)].turningSpeed = this->turningSpeed;
 }
 
@@ -285,6 +278,9 @@ void gameObject::setTurningSpeed(float newTurningSpeed){
 
 
 //Getters
+std::string gameObject::getTag(){
+	return gameObjects[(this->id - 1)].tag;
+}
 glm::vec2 gameObject::getDim() {
     return gameObjects[(this->id - 1)].dim;
 }
