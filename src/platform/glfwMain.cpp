@@ -15,6 +15,7 @@
 
 #define REMOVE_IMGUI 0
 
+
 #if REMOVE_IMGUI == 0
 	#include "imgui.h"
 	#include "backends/imgui_impl_glfw.h"
@@ -314,7 +315,6 @@ int main()
 	int h = 500;
 	wind = glfwCreateWindow(w, h, "game", nullptr, nullptr);
 	glfwMakeContextCurrent(wind);
-	glfwSwapInterval(1);
 
 	glfwSetKeyCallback(wind, keyCallback);
 	glfwSetMouseButtonCallback(wind, mouseCallback);
@@ -386,6 +386,7 @@ int main()
 
 	while (!glfwWindowShouldClose(wind))
 	{
+		glfwSwapInterval(VSYNC_TOGGLE);
 		//UpdateMusicStream(m);
 		//PlayMusicStream(m);
 

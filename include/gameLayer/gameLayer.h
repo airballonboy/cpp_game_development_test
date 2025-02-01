@@ -4,6 +4,7 @@
 bool initGame();
 bool gameLogic(float deltaTime);
 void closeGame();
+inline int VSYNC_TOGGLE = 1;
 
 namespace platform
 {

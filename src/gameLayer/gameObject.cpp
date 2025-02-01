@@ -118,8 +118,9 @@ void gameObject::colliderStruct::checkColission(){
 }
 void gameObject::move(float deltaTime) {
     glm::vec2 normalizedAcc = glm::normalize(acc);
-	this->setAcc(normalizedAcc.x + (normalizedAcc.x * deltaTime * vel.x), normalizedAcc.y + (normalizedAcc.y * deltaTime * vel.y));
-}
+	this->setAcc((normalizedAcc.x) * deltaTime * vel.x, (normalizedAcc.y) * deltaTime * vel.y);
+	this->setPos(this->pos.x + this->acc.x, this->pos.y + this->acc.y);
+} 
 
 void gameObject::gravity() {
 	//TODO add collision detection and gravity system
@@ -151,7 +152,7 @@ void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
 }
 void gameObject::updateByRef(float deltaTime, gl2d::Renderer2D& renderer, gameObject* obj){
 	if (obj->enableGravity) obj->gravity();
-	if (obj->acc != glm::vec2{0, 0}) { obj->move(deltaTime); obj->setPos(obj->pos.x + obj->acc.x, obj->pos.y + obj->acc.y); }
+	if (obj->acc != glm::vec2{0, 0}) obj->move(deltaTime);
 	if (obj->currentTextureType == gameObject::normal) {
 		renderer.renderRectangle({ (obj->pos.x - obj->pivot.x), (obj->pos.y - obj->pivot.y), obj->dim }, obj->objectTexture,
 			Colors_White, {}, glm::degrees(obj->rotation) + 90.f);
