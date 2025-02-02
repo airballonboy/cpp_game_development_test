@@ -1,4 +1,5 @@
 #include "glm/geometric.hpp"
+#include "safeSave.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "gameLayer.h"
 #include <glad/glad.h>
@@ -12,6 +13,7 @@
 #include <gl2d/gl2d.h>
 #include <platformTools.h>
 #include <tiledRenderer.h>
+#include "gameSave.hpp"
 #include <gameObject.hpp>
 
 
@@ -128,9 +130,11 @@ void spawnEnemy(float DT) {
 
 bool initGame() {
 	//Initializing stuff for the renderer
+	gameObject::gameObjects.reserve(1000);
 	gl2d::init();
 	renderer.create();
 	std::srand(std::time(0));
+	//save::loadGameObjects("gameObjects.json");
 	gameObject::newLayer("enemy", 11);
 	gameObject::newLayer("player", 15);
 	gameObject::newLayer("bullets", 8);
@@ -157,6 +161,7 @@ bool initGame() {
 		tiledRenderer[2].paralaxStrength = 0.4f;
 		tiledRenderer[3].paralaxStrength = 0.7f;
 	}
+
 
 	return true;
 }
@@ -197,7 +202,7 @@ bool gameLogic(float deltaTime) {
 		playerMove(deltaTime);
 		cameraSizeChange(deltaTime);
 		bulletShooting(deltaTime, mouseDirection);
-		for (auto& e : playData.enemies) { enemyacc(deltaTime, e); }
+		for (auto& e : playData.enemies) enemyacc(deltaTime, e);
 	}
 
 
@@ -229,6 +234,7 @@ bool gameLogic(float deltaTime) {
 			else if (VSYNC_TOGGLE == 1) VSYNC_TOGGLE = 0;
 		}
 
+		if (ImGui::Button("close game")) return false;
 		ImGui::End();
 	}
 	
@@ -243,8 +249,7 @@ bool gameLogic(float deltaTime) {
 
 //This function might not be called if the program is forced closed
 void closeGame() {
-
-	
+	//save::saveGameObjects("gameObjects.json");
 
 }
 

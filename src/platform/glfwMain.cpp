@@ -14,6 +14,7 @@
 #include <chrono>
 
 #define REMOVE_IMGUI 0
+#define GAME_NAME "shooting-game"
 
 
 #if REMOVE_IMGUI == 0
@@ -313,7 +314,7 @@ int main()
 
 	int w = 1000;
 	int h = 500;
-	wind = glfwCreateWindow(w, h, "game", nullptr, nullptr);
+	wind = glfwCreateWindow(w, h, GAME_NAME, nullptr, nullptr);
 	glfwMakeContextCurrent(wind);
 
 	glfwSetKeyCallback(wind, keyCallback);

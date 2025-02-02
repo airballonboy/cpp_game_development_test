@@ -19,7 +19,7 @@ void gameObject::newLayer(std::string name, int order){
         return a.order < b.order;
     });
 }
-bool gameObject::check(std::string thisName, std::vector<renderLayer>* L){
+bool gameObject::checkLayer(std::string thisName, std::vector<renderLayer>* L){
 	bool C;
 	for (renderLayer RL : *L) {
 		if (RL.name == thisName) { C = true;break; }
@@ -36,7 +36,7 @@ void gameObject::addToLayer(gameObject* GO, std::string name){
         return 0;
     };
     
-    if (!check (name, &layer)){
+    if (!checkLayer (name, &layer)){
         std::cerr << "name doesn't match any layer";
     }
     GO->currentLayer.name = name;
@@ -56,7 +56,7 @@ gameObject::gameObject(objectType _type, const char* _textureFile, textureType _
 	id = currentObjectCount;
 	currentTextureCoords = _texturePoint;
 	currentTextureType = _currentTextureType;
-	currentType = _type;
+	//currentType = _type;
 	if (currentTextureType == normal) {
 		currentTextureCTX = {_textureFile, false, false ,true, true};
 		objectTexture = textureLoader::textures[textureLoader::checkTextures(currentTextureCTX)].loadedTexture;
@@ -66,7 +66,7 @@ gameObject::gameObject(objectType _type, const char* _textureFile, textureType _
 		objectAtlas   = textureLoader::textures[textureLoader::getAtlasIterator(currentTextureCTX)].loadedAtlas;
 	}
     gameObjects.emplace_back(*this);
-	if(!check("default", &layer)) newLayer("default", 10);
+	if(!checkLayer("default", &layer)) newLayer("default", 10);
     addToLayer(&gameObjects[this->id - 1], "default");
 }
 gameObject::gameObject(){}
@@ -133,6 +133,7 @@ void gameObject::updateAll(float deltaTime, gl2d::Renderer2D& renderer) {
 	// NOTE: needs a refactor
 	int currentRenderOrder = 0;
     colliderStruct::checkColission();
+
     for (size_t i = 0; i < layer.size(); i++){
         for (auto& go : gameObjects){
 			if (go.erased) continue;
@@ -168,7 +169,7 @@ void gameObject::tempReload(){
 			obj.objectTexture = textureLoader::textures[textureLoader::checkTextures(obj.currentTextureCTX)].loadedTexture;
 		} else if (obj.currentTextureType == atlas) {
 			obj.objectTexture = textureLoader::textures[textureLoader::checkTextures(obj.currentTextureCTX)].loadedTexture;
-			obj.objectAtlas   = textureLoader::textures[textureLoader::getAtlasIterator(obj.currentTextureCTX)].loadedAtlas;
+			obj.objectAtlas   = textureLoader::textures[textureLoader::checkTextures(obj.currentTextureCTX)].loadedAtlas;
 		}
 	}
 }
@@ -274,6 +275,16 @@ void gameObject::setTurningSpeed(float _turningSpeed){
     this->turningSpeed = _turningSpeed;
     gameObjects[(this->id - 1)].turningSpeed = this->turningSpeed;
 }
+void gameObject::setTextureCTX(textureLoader::textureCTX _textureCTX){
+	this->currentTextureCTX = _textureCTX;
+	gameObjects[(this->id - 1)].currentTextureCTX = this->currentTextureCTX;
+	if (!_textureCTX.atlas) {
+		gameObjects[(this->id - 1)].objectTexture = textureLoader::textures[textureLoader::checkTextures(currentTextureCTX)].loadedTexture;
+	} else if (_textureCTX.atlas) {
+		gameObjects[(this->id - 1)].objectTexture = textureLoader::textures[textureLoader::checkTextures(currentTextureCTX)].loadedTexture;
+		gameObjects[(this->id - 1)].objectAtlas   = textureLoader::textures[textureLoader::checkTextures(currentTextureCTX)].loadedAtlas;
+	}
+}
 
 
 
@@ -317,6 +328,9 @@ float gameObject::getTurningSpeed(){
 }
 int gameObject::getId() {
 	return this->id;
+}
+textureLoader::textureCTX gameObject::getTextureCTX(){
+	return gameObjects[(this->id - 1)].currentTextureCTX;
 }
 
 

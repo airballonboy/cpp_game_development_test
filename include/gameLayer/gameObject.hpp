@@ -92,6 +92,7 @@ public:
     void setBaseGravity(float);
     void setRotation(float);
     void setTurningSpeed(float);
+	void setTextureCTX(textureLoader::textureCTX);
 
 
     //Getters
@@ -108,12 +109,13 @@ public:
     float getBaseGravity();
     float getRotation();
     float getTurningSpeed();
+	textureLoader::textureCTX getTextureCTX();
 
 
 
     static void newLayer(std::string, int);
     static void addToLayer(gameObject*, std::string);
-  	static bool check(std::string, std::vector<renderLayer>*);
+  	static bool checkLayer(std::string, std::vector<renderLayer>*);
  
 
 
